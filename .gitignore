@@ -1,0 +1,5 @@
+*.bin
+*.img
+
+# Mac
+.DS_Store
