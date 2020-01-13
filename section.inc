@@ -8,6 +8,11 @@ DPL2            equ 40h
 ; 特权级3
 DPL3            equ 60h
 
+; GDT 段选择符
+TI_GDT          equ 0h
+; LDT 段选择符
+TI_LDT          equ 4h
+
 ; 数据段
 ; 只读数据段，已存在P=1，特权级DPL=0，高位扩E=0，不可写W=0，未访问A=0
 DATA_R          equ 90h                    
@@ -29,7 +34,11 @@ CODE_CR         equ 9ah
 ; 代码段，已存在P=1，特权级DPL=0，一致代码段C=1，不可读R=0，未访问A=0
 CODE_C0         equ 9ch                    
 ; 代码段，已存在P=1，特权级DPL=0，一致代码段C=1，可读R=1，未访问A=0
-CODE_C0R        equ 9eh                    
+CODE_C0R        equ 9eh  
+
+; 系统段常量
+; GDT 中的 LDT 索引，已存在P=1, 特权级 DPL=1        v
+SYS_LDT         equ 82h
 
 ; GDT 描述符宏
 ; params: 
@@ -37,7 +46,7 @@ CODE_C0R        equ 9eh
 ;         Base: 32位ÍÍ
 ;         Attr: 
 
-%macro GDT_DESCRIPTOR 3
+%macro DESCRIPTOR 3
     dw  %1 & 0ffffh
     dw  %2 & 0ffffh
     db  (%2 >> 16) & 0ffh
