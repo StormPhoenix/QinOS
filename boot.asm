@@ -1,9 +1,9 @@
 %include    "section.inc"
 
-LIMIT_GDT_CODE_LIMIT   equ end_text - begin_text
-LIMIT_GDT_DATA_LIMIT   equ end_text - begin_text
+LIMIT_GDT_CODE         equ end_text - begin_text
+LIMIT_GDT_DATA         equ end_text - begin_text
 
-LIMIT_LDT0      equ ldt0_end - ldt0
+; LIMIT_LDT0             equ ldt0_end - ldt0
 
 org     07c00h
 
@@ -15,13 +15,19 @@ begin_text:
 gdt:
     DESCRIPTOR  0, 0, 0
 gdt_desc_code:
-    DESCRIPTOR  LIMIT_GDT_CODE_LIMIT, 0, CODE_C + CODE_32
+    DESCRIPTOR  LIMIT_GDT_CODE, 0, CODE_C + CODE_32
 gdt_desc_data:
-    DESCRIPTOR  LIMIT_GDT_DATA_LIMIT, 0, DATA_R
+    DESCRIPTOR  LIMIT_GDT_DATA, 0, DATA_R
 gdt_desc_video:
     DESCRIPTOR  0ffffh, 0b8000h, DATA_RW
-gdt_desc_ldt0:
-    DESCRIPTOR  LIMIT_LDT0, 0, SYS_LDT
+; gdt_desc_ldt0:
+;     DESCRIPTOR  LIMIT_LDT0, 0, SYS_LDT
+gdt_desc_call_gate_code:
+    DESCRIPTOR  LIMIT_CALL_GATE_CODE, 0, CODE_C + CODE_32
+gdt_desc_call_gate_data:
+    DESCRIPTOR  LIMIT_CALL_GATE_DATA, 0, DATA_R + DPL_0
+gdt_desc_call_gate:
+    GATE        0,  SELECTOR_CALL_GATE_CODE, 0, DPL_0
 gdt_len     equ $ - gdt
 gdt_ptr:
     dw  gdt_len - 1
@@ -34,7 +40,13 @@ SELECTOR_GDT_VIDEO  equ gdt_desc_video - gdt
 ; 数据段选择符
 SELECTOR_GDT_DATA   equ gdt_desc_data - gdt
 ; ldt0 选择符号，供 lldt 指令使用
-SELECTOR_GDT_LDT0   equ gdt_desc_ldt0 - gdt
+; SELECTOR_GDT_LDT0   equ gdt_desc_ldt0 - gdt
+; call gate 需要使用的数据段选择符号
+SELECTOR_CALL_GATE_DATA     equ gdt_desc_call_gate_data - gdt
+; 调用门指向的代码段
+SELECTOR_CALL_GATE_CODE     equ gdt_desc_call_gate_code - gdt
+; call gate 选择符
+SELECTOR_CALL_GATE  equ gdt_desc_call_gate - gdt
 
 start:
     ; 初始化代码
@@ -49,7 +61,7 @@ start:
     mov byte [gdt_desc_code + 4], al
     mov byte [gdt_desc_code + 7], ah
 
-    ; 设置 LDT 表中数据段描述符
+    ; 设置 GDT 表中数据段描述符
     xor eax, eax
     mov ax, ds
     add eax, label_protect_mode
@@ -59,28 +71,44 @@ start:
     mov byte [gdt_desc_data + 7], ah
 
     ; 设置 GDT 表中的 LDT 描述符
+    ; xor eax, eax
+    ; mov eax, ldt0
+    ; mov word [gdt_desc_ldt0 + 2], ax
+    ; shr eax, 16
+    ; mov byte [gdt_desc_ldt0 + 4], al
+    ; mov byte [gdt_desc_ldt0 + 7], ah
+
+    ; 设置 GDT 表中 call gate 使用的数据段
     xor eax, eax
-    mov eax, ldt0
-    mov word [gdt_desc_ldt0 + 2], ax
+    mov eax, call_gate_message
+    mov word [gdt_desc_call_gate_data + 2], ax
     shr eax, 16
-    mov byte [gdt_desc_ldt0 + 4], al
-    mov byte [gdt_desc_ldt0 + 7], ah
+    mov byte [gdt_desc_call_gate_data + 4], al
+    mov byte [gdt_desc_call_gate_data + 7], ah
+
+    ; 设置 GDT 表中 call gate 使用的代码段
+    xor eax, eax 
+    mov eax, call_gate_code
+    mov word [gdt_desc_call_gate_code + 2], ax
+    shr eax, 16
+    mov byte [gdt_desc_call_gate_code + 4], al
+    mov byte [gdt_desc_call_gate_code + 7], ah
 
     ; 设置 LDT 表中的代码段描述符
-    xor eax, eax
-    mov eax, task0_code
-    mov word [ldt0_desc_code + 2], ax
-    shr eax, 16
-    mov byte [ldt0_desc_code + 4], al
-    mov byte [ldt0_desc_code + 7], ah
+    ; xor eax, eax
+    ; mov eax, task0_code
+    ; mov word [ldt0_desc_code + 2], ax
+    ; shr eax, 16
+    ; mov byte [ldt0_desc_code + 4], al
+    ; mov byte [ldt0_desc_code + 7], ah
 
     ; 设置 LDT 表中的数据段描述符
-    xor eax, eax
-    mov eax, task0_data
-    mov word [ldt0_desc_data + 2], ax
-    shr eax, 16
-    mov byte [ldt0_desc_data + 4], al
-    mov byte [ldt0_desc_data + 7], ah
+    ; xor eax, eax
+    ; mov eax, task0_data
+    ; mov word [ldt0_desc_data + 2], ax
+    ; shr eax, 16
+    ; mov byte [ldt0_desc_data + 4], al
+    ; mov byte [ldt0_desc_data + 7], ah
 
     ; 以下预备切换到保护模式
 
@@ -117,9 +145,9 @@ label_protect_mode:
     mov esi, eax
 
     mov edx, 20
-	mov	ah, 0Ch			; 0000: 黑底    1100: 红字
+	mov	ah, 0ch			; 0000: 黑底    1100: 红字
 
-    mov cx, 21
+    mov cx, 20
 repeat:
     mov byte al, [es:esi]
     ; 屏幕第 20 行, 第 dx 列
@@ -136,10 +164,13 @@ repeat:
     cmp cx, 0
     jnz repeat
 
+    call SELECTOR_CALL_GATE:0
+    jmp $
+
     ; lldt 指令必须要在保护模式里面执行，在实模式下面执行会报错
     ; 错误写法 lldt    SELECTOR_GDT_LDT0
-    mov ax, SELECTOR_GDT_LDT0
-    lldt    ax
+    ; mov ax, SELECTOR_GDT_LDT0
+    ; lldt    ax
 
     ; jmp $
     ; 这里只能采用直接写入显存的方式，因为还没有加上中断描述表，所以不能在保护模式下使用中断
@@ -151,34 +182,19 @@ repeat:
 	; mov	dl, 0
 	; int	10h			; 10h 号中断
     ; jmp $
-    jmp SELECTOR_LDT0_CODE:0
+    ; jmp SELECTOR_LDT0_CODE:0
 
 print_message:
-    db  "Hello, Storm Phoenix."
+    db  "Qin OS is starting !"
 end_text:
 
-LIMIT_LDT0_CODE     equ task0_code_end - task0_code
-LIMIT_LDT0_DATA     equ taks0_data_end - task0_data
-
-; LDT 表
-ldt0:
-ldt0_desc_code:
-    DESCRIPTOR  LIMIT_LDT0_CODE, 0, CODE_CR + CODE_32
-ldt0_desc_data:
-    DESCRIPTOR  LIMIT_LDT0_DATA, 0, DATA_R
-ldt0_end:
-
-; LDT0 的数据段选择符
-SELECTOR_LDT0_DATA  equ ldt0_desc_data - ldt0 + TI_LDT
-; LDT0 的代码段选择符
-SELECTOR_LDT0_CODE  equ ldt0_desc_code - ldt0 + TI_LDT
-
-task0_code:
-    ; 从 [es:esi] 指定的位置复制数据到 [gs:edi] 指向到显存中
+; 这一部分代码通过调用门来执行
+call_gate_code:
+    ; 这个部分和其他显示字符的代码一样，没什么特别的
     mov ax, SELECTOR_GDT_VIDEO
     mov gs, ax
 
-    mov ax, SELECTOR_LDT0_DATA
+    mov ax, SELECTOR_CALL_GATE_DATA
     mov es, ax
 
     mov eax, 0
@@ -187,13 +203,12 @@ task0_code:
     mov edx, 20
     mov ah, 0ch
 
-    mov cx, 19
-
-task0_repeat:
+    mov cx, 20
+call_gate_repeat:
     mov byte al, [es:esi]
 
     mov edi, edx
-    add edi, 80 * 22
+    add edi, 80 * 24
     add edi, edi
 
     mov [gs:edi], ax
@@ -202,13 +217,73 @@ task0_repeat:
     inc edx
     dec cx
     cmp cx, 0
-    jnz task0_repeat
-    jmp $
-task0_code_end:
+    jnz call_gate_repeat
+    retf
 
-task0_data:
-    db  "Enter in LDT0 Code."
-taks0_data_end:
+LIMIT_CALL_GATE_CODE   equ $ - call_gate_code
+
+
+; 调用门代码访问的数据段
+call_gate_message:
+    db  "call gate msg: bitch"
+
+LIMIT_CALL_GATE_DATA   equ $ - call_gate_message
+
+; LIMIT_LDT0_CODE     equ task0_code_end - task0_code
+; LIMIT_LDT0_DATA     equ taks0_data_end - task0_data
+
+; LDT 表
+; ldt0:
+; ldt0_desc_code:
+;     DESCRIPTOR  LIMIT_LDT0_CODE, 0, CODE_CR + CODE_32
+; ldt0_desc_data:
+;     DESCRIPTOR  LIMIT_LDT0_DATA, 0, DATA_R
+; ldt0_end:
+
+; LDT0 的数据段选择符
+; SELECTOR_LDT0_DATA  equ ldt0_desc_data - ldt0 + TI_LDT
+; LDT0 的代码段选择符
+; SELECTOR_LDT0_CODE  equ ldt0_desc_code - ldt0 + TI_LDT
+
+; task0_code:
+;     ; 从 [es:esi] 指定的位置复制数据到 [gs:edi] 指向到显存中
+;     mov ax, SELECTOR_GDT_VIDEO
+;     mov gs, ax
+
+;     mov ax, SELECTOR_LDT0_DATA
+;     mov es, ax
+
+;     mov eax, 0
+;     mov esi, eax
+
+;     mov edx, 20
+;     mov ah, 0ch
+
+;     mov cx, 19
+
+; task0_repeat:
+;     mov byte al, [es:esi]
+
+;     mov edi, edx
+;     add edi, 80 * 22
+;     add edi, edi
+
+;     mov [gs:edi], ax
+
+;     inc esi
+;     inc edx
+;     dec cx
+;     cmp cx, 0
+;     jnz task0_repeat
+
+;     call SELECTOR_CALL_GATE:0
+
+;     jmp $
+; task0_code_end:
+
+; task0_data:
+;     db  "Enter in LDT0 Code."
+; taks0_data_end:
 
 times   510 - ($ - $$)   db  0
 dw  0xaa55

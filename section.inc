@@ -1,12 +1,22 @@
 ; 特权级
 ; 特权级0
-DPL0            equ 00h
+DPL_0           equ 00h
 ; 特权级1
-DPL1            equ 20h
+DPL_1           equ 20h
 ; 特权级2
-DPL2            equ 40h
+DPL_2           equ 40h
 ; 特权级3
-DPL3            equ 60h
+DPL_3           equ 60h
+
+; 请求特权级0
+RPL_0           equ 0
+; 请求特权级1
+RPL_1           equ 1
+; 请求特权级2
+RPL_2           equ 2
+; 请求特权级3
+RPL_3           equ 3
+
 
 ; GDT 段选择符
 TI_GDT          equ 0h
@@ -45,11 +55,24 @@ SYS_LDT         equ 82h
 ;         Limit: 低 20 位有效
 ;         Base: 32位ÍÍ
 ;         Attr: 
-
 %macro DESCRIPTOR 3
     dw  %1 & 0ffffh
     dw  %2 & 0ffffh
     db  (%2 >> 16) & 0ffh
     dw  ((%1 >> 8) & 0f00h) | (%3 & 0f0ffh)          
     db  (%2 >> 24) & 0ffh
+%endmacro
+
+; GDT 描述符宏 - Gate 调用门描述符
+; params: 
+;         Offset: 32位 目标代码在段中偏移
+;         Selector: 16位 目标代码段在 GDT 中段选择符
+;         Param_Count: 8位，传入参数个数
+;         Attr: 8位，调用门段属性，P、DPL
+%macro GATE 4
+    dw  %1 & 0ffffh
+    dw  %2 & 0ffffh
+    db  %3 & 01fh
+    db  (08ch | (%4 & 060h))      ; 08ch 是 P=1 和 TYPE=1100b  
+    dw  ((%1 >> 16) & 0ffffh)
 %endmacro
