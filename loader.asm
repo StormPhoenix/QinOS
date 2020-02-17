@@ -539,15 +539,126 @@ PM_MODE_START:
 
 	call	print_memory_info
 
-	call	print_return
+	call	print_newline
 	push	STRING_START_PAGING
 	call	print_string
 	add 	esp, 4
 	
 	call	setup_paging
 
-	jmp	$
-		
+	call	print_newline
+	push	STRING_SETUP_KERNEL
+	call	print_string
+	add		esp, 4
+
+	call 	setup_kernel
+
+	jmp		SELECTOR_CODE:KERNEL_ENTRY_POINT
+
+
+;------------------------------------------------------------------------------------------
+; setup_kernel
+; 描述：内核是elf格式，根据elf信息重新放置内核位置
+;
+; e_phnum program header table 数目，offset = 2ch，size = 2 byte
+; e_phoff program header table 在文件中的偏移值，offset = 1ch，size = 4 byte
+; e_phentsize program header 大小，offset = 2ah，size = 2 byte
+;
+; p_type 类型，offset = 0h，size = 4 byte
+; p_offset 段的第一个字节在文件中的偏移，offset = 4h，size = 4 byte
+; p_vaddr 段在内存段虚拟地址，offset = 8h，size = 4 byte
+; p_filesz 段在文件中段长度，offset = 10h，size = 4 byte
+;------------------------------------------------------------------------------------------
+setup_kernel:
+	push	ecx
+	push	esi
+	push 	eax
+	push	edx
+
+	; 得到 program header 数目
+	; e_phnum 只有两个字节，需要扩展到32位
+	mov		cx, word [BASE_KERNEL * 10h + OFFSET_KERNEL + 2ch]
+	movzx	ecx, cx
+	; e_phoff
+	mov		esi, dword [BASE_KERNEL * 10h + OFFSET_KERNEL + 1ch]
+	add		esi, BASE_KERNEL * 10h + OFFSET_KERNEL
+	; e_phentsize，不过一般来说这个值都是 020h
+	mov		bx, word [BASE_KERNEL * 10h + OFFSET_KERNEL + 2ah]
+	movzx	ebx, bx
+
+	; -------- 检查每一个 program header --------
+.1:
+	; 得到 p_type
+	; 这里 p_type 取值我没查ELF相关资料，这里和书上处理一样吧
+	mov		eax, [esi + 0h]
+	cmp		eax, 0
+	jz		.2
+
+	; p_vaddr
+	push	dword [esi + 08h]
+	; p_filesz
+	push	dword [esi + 10h]
+	; p_offset
+	mov		eax, [esi + 04h]
+	add		eax, BASE_KERNEL * 10h + OFFSET_KERNEL
+	push	eax
+	call	copy_memory
+	add		esp, 12
+
+.2:
+	add		esi, ebx
+	dec		ecx
+	cmp		ecx, 0
+	jnz		.1
+
+	pop		edx
+	pop		eax
+	pop		esi
+	pop 	ecx
+	ret
+
+
+;------------------------------------------------------------------------------------------
+; copy_memory
+; 参数：
+;	src	位置[esp + 4]，大小 4 byte
+;   num 复制字节数目 位置[esp + 8]，大小 4 byte
+;   dst 位置[esp + 12]，大小 4 byte
+; 描述：复制内存，从src处复制num个字节到dst
+;------------------------------------------------------------------------------------------
+copy_memory:
+	push	ebp
+	mov		ebp, esp
+	push 	esi
+	push 	ecx
+	push 	edi
+	push 	eax
+
+	; 取出 src
+	mov		esi, [ebp + 8]
+	mov 	ecx, [ebp + 12]
+	mov		edi, [ebp + 16]
+
+.1:
+	; TODO 下面这两行代码能不能替换成 lodsb 和 stosb 以及loop
+	mov		al, [ds:esi]
+	inc		esi
+
+	mov 	byte [es:edi], al 
+	inc 	edi
+
+	dec 	ecx
+	; TODO 代码不健壮，没有判断参数num是否小于0
+	cmp  	ecx, 0
+	jnz		.1	
+
+	pop 	eax
+	pop 	edi
+	pop 	ecx
+	pop 	esi
+	pop		ebp
+	ret
+
 
 ;------------------------------------------------------------------------------------------
 ; print_memory_info
@@ -577,7 +688,7 @@ print_memory_info:
 	cmp		edx, 0
 	jnz		.READ_ARDS_STRUCT
 
-	call	print_return
+	call	print_newline
 	cmp 	dword [ARDS_TYPE], 1
 	jne		.KEEP_READING_ARDS
 
@@ -591,7 +702,7 @@ print_memory_info:
 .KEEP_READING_ARDS:
 	loop	.READ_ARDS
 
-	call	print_return
+	call	print_newline
 	push	STRING_MEMORY_SIZE
 	call 	print_string
 	add		esp, 4
@@ -600,7 +711,7 @@ print_memory_info:
 	call	print_int
 	add		esp, 4
 
-	call 	print_return
+	call 	print_newline
 
 	pop 	edi
 	pop 	eax
@@ -849,11 +960,11 @@ print_string:
 
 
 ;------------------------------------------------------------------------------------------
-; print_return
+; print_newline
 ; 描述：打印'\n'
 ;------------------------------------------------------------------------------------------
 
-print_return:
+print_newline:
 	push	STRING_NEWLINE
 	call	print_string
 	add		esp, 4
@@ -906,6 +1017,10 @@ STRING_NEWLINE 		equ BASE_LOADER * 10h + _STRING_NEWLINE
 _STRING_START_PAGING:
 	db "Setup paging ... ", 0
 STRING_START_PAGING equ BASE_LOADER * 10h + _STRING_START_PAGING
+
+_STRING_SETUP_KERNEL:
+	db "Setup kernel ... ", 0
+STRING_SETUP_KERNEL equ BASE_LOADER * 10h + _STRING_SETUP_KERNEL
 
 _SCREEN_POS:
 	dd	(80 * 4 + 0) * 2

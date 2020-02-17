@@ -6,6 +6,7 @@
 ; TODO 这里提一个问题，如果OS过大，放在这里会不会覆盖掉 loader.bin 本身
 BASE_KERNEL		equ 08000h
 OFFSET_KERNEL	equ 0100h
+KERNEL_ENTRY_POINT      equ 0x30400
 
 ; loader.bin 位置
 BASE_LOADER     equ 09000h
