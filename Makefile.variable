@@ -1,0 +1,12 @@
+PLATFORM    = "macOS"
+
+ifeq ($(PLATFORM), "macOS")
+    AS			= nasm
+    LD			= i386-elf-ld
+    CC			= i386-elf-gcc
+else ifeq ($(PLATFORM), "ubuntu")
+    AS          = nasm
+    LD          = ld
+    CC          = gcc
+endif
+# macOS
