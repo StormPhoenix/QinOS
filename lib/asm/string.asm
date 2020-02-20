@@ -42,7 +42,7 @@ copy_memory:
     inc     edi
 
     dec     ecx
-    jc      .1
+    jmp     .1
 
 .2:
     pop     eax

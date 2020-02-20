@@ -2,7 +2,7 @@ include ../Makefile.variable
 
 CFLAGS		= -I ../include -c
 
-OBJS		= kernel.o string.o main.o
+OBJS		= kernel.o string.o bits.o main.o trap.o
 
 TARGET		= kernel.bin
 
@@ -18,9 +18,14 @@ kernel.bin: $(OBJS)
 kernel.o: kernel.asm
 	$(AS) -f elf kernel.asm -o $@
 
-string.o: ../lib/string.asm
-	$(AS) -f elf ../lib/string.asm -o $@
+string.o: ../lib/asm/string.asm
+	$(AS) -f elf ../lib/asm/string.asm -o $@
 
-main.o: main.c 
+bits.o: ../lib/asm/bits.asm
+	$(AS) -f elf ../lib/asm/bits.asm -o $@
+
+main.o: main.c
 	$(CC) -m32 $(CFLAGS) main.c -o $@
 
+trap.o: trap.c
+	$(CC) -m32 $(CFLAGS) trap.c -o $@

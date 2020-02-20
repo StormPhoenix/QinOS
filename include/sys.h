@@ -3,21 +3,63 @@
 
 #include "type.h"
 
-// 系统段描述符
+
+// 代码段、数据段描述符
 typedef struct descriptor
 {
     // 段限长，0 - 15 位
-    u16 limitLow;
+    u16 limit_low;
     // 基地址，16 - 31 位
-    u16 baseLow;
+    u16 base_low;
     // 基地址，32 - 39 位
-    u8 baseMid;
+    u8 base_mid;
     // 属性1，40 - 47
     u8 attributes;
     // 4 位段限长 + 4 位属性，48 - 55 位
-    u8 limitHighAndAttributes;
+    u8 limit_high_and_attributes;
     // 基地址，56 - 63 位
-    u8 baseHigh;
+    u8 base_high;
 } Descriptor;
+
+
+// 中断向量号
+#define INT_VECTOR_DIVIDE_ERROR         0x0
+#define INT_VECTOR_DEBUG                0x1
+#define INT_VECTOR_NMI                  0x2
+#define INT_VECTOR_UD                   0x6
+// 外部中断向量
+#define INT_VECTOR_IRQ0                 0x20
+#define INT_VECTOR_IRT8                 0x28
+
+// 内核代码段选择符
+#define SELECTOR_KERNEL_CODE 0x8
+
+// 门类型
+#define CALL_GATE           12 
+/*
+ * IDT 表只有三个类型的 Gate，
+ * Trap Gate 和 Interrupt Gate 的区别是对 EFLAGS 中的 IF 标志。
+ * IF 标志用来屏蔽其他中断的。这意味这 Trap Gate 会被打断，而 Interrupt Gate 不会
+ */
+#define TRAP_GATE           (u8)15
+#define INTERRUPT_GATE      (u8)14
+#define TASK_GATE           (u8)5
+
+#define DPL_KERNEL          (unsigned char) 0
+
+// 调用门描述符
+typedef struct gate
+{
+    // 段中偏移值低16位
+    u16 offset_low;
+    // 段选择符
+    u16 selector;
+    // 参数个数
+    u8 param_count;
+    // type、dpl、p
+    u8 attributs;
+    // 段中偏移值高16位
+    u16 offset_high;
+} Gate;
 
 #endif
