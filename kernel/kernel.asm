@@ -1,6 +1,6 @@
 extern	setup_gdt
 extern  init_idt
-extern	gdt_pointer
+extern	gdt_ptr
 extern  exception_handler
 extern  hardware_interrupt_handler
 extern  idt_ptr
@@ -17,19 +17,23 @@ stack_top:
 [SECTION .text]
 
 global	_start
-global  divide_error, undefine_opcode
+global  divide_error, debug, nmi, breakpoint, overflow, bounds
+global  undefine_opcode, device_not_available, double_fault, coprocessor_segment_overrun
+global  invalid_tss, segment_not_present, stack_error, general_protection
+global page_fault, reserved, coprocessor_error, alignment_check
 global  irq0, irq1, irq2, irq3, irq4, irq5, irq6, irq7, irq8
 global  irq9, irq10, irq11, irq12, irq13, irq14, irq15
+
 
 _start:
 	; 切换堆栈
 	mov 	esp, stack_top
 	; gdt 指针赋值
-	sgdt 	[gdt_pointer]
+	sgdt 	[gdt_ptr]
 	; gdt
 	call	setup_gdt
 	; 重加载 gdt
-	lgdt	[gdt_pointer]
+	lgdt	[gdt_ptr]
 	; 设置 idt
 	call	init_idt
 	lidt	[idt_ptr]
@@ -133,9 +137,121 @@ divide_error:
 	jmp		exception
 
 
-undefine_opcode:
+debug:
+	; 没有 error_code
 	push	0xffffffff
-	push 	6
+	push	1
+	jmp		exception
+
+
+nmi:
+	; 没有 error_code
+	push	0xffffffff
+	push	2
+	jmp		exception
+
+
+breakpoint:
+	; 没有 error_code
+	push	0xffffffff
+	push	3
+	jmp		exception
+
+
+overflow:
+	; 没有 error_code
+	push	0xffffffff
+	push	4
+	jmp		exception
+
+
+bounds:
+	; 没有 error_code
+	push	0xffffffff
+	push	5
+	jmp		exception
+
+
+undefine_opcode:
+	; 没有 error_code
+	push	0xffffffff
+	push	6
+	jmp		exception
+
+
+device_not_available:
+	; 没有 error_code
+	push	0xffffffff
+	push	7
+	jmp		exception
+
+
+double_fault:
+	; 没有 error_code
+	push	0xffffffff
+	push	8
+	jmp		exception
+
+
+coprocessor_segment_overrun:
+	; 没有 error_code
+	push	0xffffffff
+	push	9
+	jmp		exception
+
+
+invalid_tss:
+	; 没有 error_code
+	push	0xffffffff
+	push	10
+	jmp		exception
+
+
+segment_not_present:
+	; 没有 error_code
+	push	0xffffffff
+	push	11
+	jmp		exception
+
+
+stack_error:
+	; 没有 error_code
+	push	0xffffffff
+	push	12
+	jmp		exception
+
+
+general_protection:
+	; 没有 error_code
+	push	0xffffffff
+	push	13
+	jmp		exception
+
+
+page_fault:
+	; 没有 error_code
+	push	0xffffffff
+	push	14
+	jmp		exception
+
+
+reserved:
+	; 没有 error_code
+	push	0xffffffff
+	push	15
+	jmp		exception
+
+
+coprocessor_error:
+	; 没有 error_code
+	push	0xffffffff
+	push	16
+	jmp		exception
+
+
+alignment_check:
+	push	0xffffffff
+	push 	17
 	jmp 	exception
 
 

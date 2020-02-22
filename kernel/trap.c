@@ -29,10 +29,24 @@ extern void print_string(char *msg);
  * 参数，但是这个在c语言里面做不到
  */
 // -------- 内部中断处理函数 --------
-// 除0
 void divide_error(void);
-// 未定义操作码
+void debug(void);
+void nmi(void);
+void breakpoint(void);
+void overflow(void);
+void bounds(void);
 void undefine_opcode(void);
+void device_not_available(void);
+void double_fault(void);
+void coprocessor_segment_overrun(void);
+void invalid_tss(void);
+void segment_not_present(void);
+void stack_error(void);
+void general_protection(void);
+void page_fault(void);
+void reserved(void);
+void coprocessor_error(void);
+void alignment_check(void);
 // 内部中断统一交由 exception 来处理
 void exception(void);
 
@@ -70,7 +84,8 @@ void do_divide_error(int int_vector, int error_code, int eip, int cs, int eflags
  * 描述：默认的外部（硬件）中断处理函数
  */
 void hardware_interrupt_handler(int int_vector) {
-    print_string("Hardware interrupt is coming, vector");
+    // TODO 默认处理，以后还要修改的
+    print_string("Hardware interrupt occur\n");
 }
 
 
@@ -120,7 +135,7 @@ void exception_handler(int int_vector, int error_code, int eip, int cs, int efla
  *  type   门类型
  *  dpl    等级
  */
-PRIVATE void init_idt_descriptor(unsigned char vector, u8 type, int_handler handler, unsigned char dpl) {
+PRIVATE void set_idt_gate(unsigned char vector, u8 type, int_handler handler, unsigned char dpl) {
     Gate *gate_entry = &idt[vector];
     // 偏移地址
     u32 offset = (u32) handler;
@@ -163,27 +178,42 @@ PRIVATE void setup_8259A() {
 void init_idt() {
     setup_8259A();
     // 设置外部中断
-    // TODO 编写注释
-    init_idt_descriptor(INT_VECTOR_IRQ0 + 0, INTERRUPT_GATE, irq0, DPL_KERNEL);
-    init_idt_descriptor(INT_VECTOR_IRQ0 + 1, INTERRUPT_GATE, irq1, DPL_KERNEL);
-    init_idt_descriptor(INT_VECTOR_IRQ0 + 2, INTERRUPT_GATE, irq2, DPL_KERNEL);
-    init_idt_descriptor(INT_VECTOR_IRQ0 + 3, INTERRUPT_GATE, irq3, DPL_KERNEL);
-    init_idt_descriptor(INT_VECTOR_IRQ0 + 4, INTERRUPT_GATE, irq4, DPL_KERNEL);
-    init_idt_descriptor(INT_VECTOR_IRQ0 + 5, INTERRUPT_GATE, irq5, DPL_KERNEL);
-    init_idt_descriptor(INT_VECTOR_IRQ0 + 6, INTERRUPT_GATE, irq6, DPL_KERNEL);
-    init_idt_descriptor(INT_VECTOR_IRQ0 + 7, INTERRUPT_GATE, irq7, DPL_KERNEL);
-    init_idt_descriptor(INT_VECTOR_IRQ0 + 8, INTERRUPT_GATE, irq8, DPL_KERNEL);
-    init_idt_descriptor(INT_VECTOR_IRQ0 + 9, INTERRUPT_GATE, irq9, DPL_KERNEL);
-    init_idt_descriptor(INT_VECTOR_IRQ0 + 10, INTERRUPT_GATE, irq10, DPL_KERNEL);
-    init_idt_descriptor(INT_VECTOR_IRQ0 + 11, INTERRUPT_GATE, irq11, DPL_KERNEL);
-    init_idt_descriptor(INT_VECTOR_IRQ0 + 12, INTERRUPT_GATE, irq12, DPL_KERNEL);
-    init_idt_descriptor(INT_VECTOR_IRQ0 + 13, INTERRUPT_GATE, irq13, DPL_KERNEL);
-    init_idt_descriptor(INT_VECTOR_IRQ0 + 14, INTERRUPT_GATE, irq14, DPL_KERNEL);
-    init_idt_descriptor(INT_VECTOR_IRQ0 + 15, INTERRUPT_GATE, irq15, DPL_KERNEL);
-    // divide_error
-    init_idt_descriptor(INT_VECTOR_DIVIDE_ERROR, INTERRUPT_GATE, divide_error, DPL_KERNEL);
-    // undefine_opcode
-    init_idt_descriptor(INT_VECTOR_UD, INTERRUPT_GATE, undefine_opcode, DPL_KERNEL);
+    set_idt_gate(INT_VECTOR_IRQ0 + 0, INTERRUPT_GATE, irq0, DPL_KERNEL);
+    set_idt_gate(INT_VECTOR_IRQ0 + 1, INTERRUPT_GATE, irq1, DPL_KERNEL);
+    set_idt_gate(INT_VECTOR_IRQ0 + 2, INTERRUPT_GATE, irq2, DPL_KERNEL);
+    set_idt_gate(INT_VECTOR_IRQ0 + 3, INTERRUPT_GATE, irq3, DPL_KERNEL);
+    set_idt_gate(INT_VECTOR_IRQ0 + 4, INTERRUPT_GATE, irq4, DPL_KERNEL);
+    set_idt_gate(INT_VECTOR_IRQ0 + 5, INTERRUPT_GATE, irq5, DPL_KERNEL);
+    set_idt_gate(INT_VECTOR_IRQ0 + 6, INTERRUPT_GATE, irq6, DPL_KERNEL);
+    set_idt_gate(INT_VECTOR_IRQ0 + 7, INTERRUPT_GATE, irq7, DPL_KERNEL);
+    set_idt_gate(INT_VECTOR_IRQ0 + 8, INTERRUPT_GATE, irq8, DPL_KERNEL);
+    set_idt_gate(INT_VECTOR_IRQ0 + 9, INTERRUPT_GATE, irq9, DPL_KERNEL);
+    set_idt_gate(INT_VECTOR_IRQ0 + 10, INTERRUPT_GATE, irq10, DPL_KERNEL);
+    set_idt_gate(INT_VECTOR_IRQ0 + 11, INTERRUPT_GATE, irq11, DPL_KERNEL);
+    set_idt_gate(INT_VECTOR_IRQ0 + 12, INTERRUPT_GATE, irq12, DPL_KERNEL);
+    set_idt_gate(INT_VECTOR_IRQ0 + 13, INTERRUPT_GATE, irq13, DPL_KERNEL);
+    set_idt_gate(INT_VECTOR_IRQ0 + 14, INTERRUPT_GATE, irq14, DPL_KERNEL);
+    set_idt_gate(INT_VECTOR_IRQ0 + 15, INTERRUPT_GATE, irq15, DPL_KERNEL);
+
+    // 设置内部中断
+    set_idt_gate(INT_VECTOR_DIVIDE_ERROR, INTERRUPT_GATE, divide_error, DPL_KERNEL);
+    set_idt_gate(INT_VECTOR_DEBUG, INTERRUPT_GATE, debug, DPL_KERNEL);
+    set_idt_gate(INT_VECTOR_NMI, INTERRUPT_GATE, nmi, DPL_KERNEL);
+    set_idt_gate(INT_VECTOR_BREAKPOINT, INTERRUPT_GATE, breakpoint, DPL_KERNEL);
+    set_idt_gate(INT_VECTOR_OVERFLOW, INTERRUPT_GATE, overflow, DPL_KERNEL);
+    set_idt_gate(INT_VECTOR_BOUNDS, INTERRUPT_GATE, bounds, DPL_KERNEL);
+    set_idt_gate(INT_VECTOR_UD, INTERRUPT_GATE, undefine_opcode, DPL_KERNEL);
+    set_idt_gate(INT_VECTOR_DEV_NOT_AVAILABLE, INTERRUPT_GATE, device_not_available, DPL_KERNEL);
+    set_idt_gate(INT_VECTOR_DOUBLE_FAULT, INTERRUPT_GATE, double_fault, DPL_KERNEL);
+    set_idt_gate(INT_VECTOR_COPR_SEG_OVERRUN, INTERRUPT_GATE, coprocessor_segment_overrun, DPL_KERNEL);
+    set_idt_gate(INT_VECTOR_INVALID_TSS, INTERRUPT_GATE, invalid_tss, DPL_KERNEL);
+    set_idt_gate(INT_VECTOR_SEG_NOT_PRESENT, INTERRUPT_GATE, segment_not_present, DPL_KERNEL);
+    set_idt_gate(INT_VECTOR_STACK_ERROR, INTERRUPT_GATE, stack_error, DPL_KERNEL);
+    set_idt_gate(INT_VECTOR_GENERAL_PROTECTION, INTERRUPT_GATE, general_protection, DPL_KERNEL);
+    set_idt_gate(INT_VECTOR_PAGE_FAULT, INTERRUPT_GATE, page_fault, DPL_KERNEL);
+    set_idt_gate(INT_VECTOR_RESERVED, INTERRUPT_GATE, reserved, DPL_KERNEL);
+    set_idt_gate(INT_VECTOR_COPR_ERROR, INTERRUPT_GATE, coprocessor_error, DPL_KERNEL);
+    set_idt_gate(INT_VECTOR_ALIGN_CHECK, INTERRUPT_GATE, alignment_check, DPL_KERNEL);
     // set idt_ptr
     *((u16*) (&idt_ptr[0])) = IDT_SIZE * sizeof(Gate) -  1;
     (*(u32*) (&idt_ptr[2])) = (u32) &idt;

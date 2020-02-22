@@ -26,7 +26,23 @@ typedef struct descriptor
 #define INT_VECTOR_DIVIDE_ERROR         0x0
 #define INT_VECTOR_DEBUG                0x1
 #define INT_VECTOR_NMI                  0x2
+#define INT_VECTOR_BREAKPOINT           0x3
+#define INT_VECTOR_OVERFLOW             0x4
+#define INT_VECTOR_BOUNDS               0x5
 #define INT_VECTOR_UD                   0x6
+#define INT_VECTOR_DEV_NOT_AVAILABLE    0x7
+#define INT_VECTOR_DOUBLE_FAULT         0x8
+#define INT_VECTOR_COPR_SEG_OVERRUN     0x9
+#define INT_VECTOR_INVALID_TSS          0x10
+#define INT_VECTOR_SEG_NOT_PRESENT      0x11
+#define INT_VECTOR_STACK_ERROR          0x12
+#define INT_VECTOR_GENERAL_PROTECTION   0x13
+#define INT_VECTOR_PAGE_FAULT           0x14
+#define INT_VECTOR_RESERVED             0x15
+#define INT_VECTOR_COPR_ERROR           0x16
+#define INT_VECTOR_ALIGN_CHECK          0x17
+
+
 // 外部中断向量
 #define INT_VECTOR_IRQ0                 0x20
 #define INT_VECTOR_IRT8                 0x28
