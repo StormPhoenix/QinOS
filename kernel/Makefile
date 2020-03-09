@@ -1,8 +1,8 @@
 include ../Makefile.variable
 
-CFLAGS		= -I ../include -c
+CFLAGS		= -I ../include -c -fno-builtin
 
-OBJS		= kernel.o string.o bits.o main.o trap.o
+OBJS		= kernel.o string_s.o string.o bits.o main.o traps.o interrupt.o protect.o sched.o
 
 TARGET		= kernel.bin
 
@@ -18,7 +18,10 @@ kernel.bin: $(OBJS)
 kernel.o: kernel.asm
 	$(AS) -f elf kernel.asm -o $@
 
-string.o: ../lib/asm/string.asm
+string.o: ../lib/string.c
+	$(CC) -m32 $(CFLAGS) ../lib/string.c -o $@
+
+string_s.o: ../lib/asm/string.asm
 	$(AS) -f elf ../lib/asm/string.asm -o $@
 
 bits.o: ../lib/asm/bits.asm
@@ -27,5 +30,14 @@ bits.o: ../lib/asm/bits.asm
 main.o: main.c
 	$(CC) -m32 $(CFLAGS) main.c -o $@
 
-trap.o: trap.c
-	$(CC) -m32 $(CFLAGS) trap.c -o $@
+interrupt.o: ./protect/interrupt.asm
+	$(AS) -f elf ./protect/interrupt.asm -o $@
+
+traps.o:
+	$(CC) -m32 $(CFLAGS) ./protect/traps.c -o $@
+
+protect.o:
+	$(CC) -m32 $(CFLAGS) ./protect/protect.c -o $@
+
+sched.o:
+	$(CC) -m32 $(CFLAGS) ./task/sched.c -o $@

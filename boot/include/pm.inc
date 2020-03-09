@@ -23,7 +23,7 @@ RPL2            equ 2
 RPL3            equ 3
 
 
-; GDT 段选择符
+; gdt 段选择符
 TI_GDT          equ 0h
 ; LDT 段选择符
 TI_LDT          equ 4h
@@ -52,10 +52,10 @@ CODE_C0         equ 9ch
 CODE_C0R        equ 9eh  
 
 ; 系统段常量
-; GDT 中的 LDT 索引，已存在P=1, 特权级 DPL=1        v
+; gdt 中的 LDT 索引，已存在P=1, 特权级 DPL=1        v
 SYS_LDT         equ 82h
 
-; GDT 描述符宏
+; gdt 描述符宏
 ; 参数：
 ;   Limit: 低 20 位有效
 ;   Base: 32位
@@ -68,10 +68,10 @@ SYS_LDT         equ 82h
     db  (%2 >> 24) & 0ffh
 %endmacro
 
-; GDT 描述符宏 - Gate 调用门描述符
+; gdt 描述符宏 - Gate 调用门描述符
 ; params: 
 ;         Offset: 32位 目标代码在段中偏移
-;         Selector: 16位 目标代码段在 GDT 中段选择符
+;         Selector: 16位 目标代码段在 gdt 中段选择符
 ;         Param_Count: 8位，传入参数个数
 ;         Attr: 8位，调用门段属性，P、DPL
 %macro GATE 4

@@ -13,7 +13,7 @@ BASE_LOADER     equ 09000h
 OFFSET_LOADER   equ 0100h
 
 ; TODO 参考一下内存分布表
-; 页目录表存放基地址 1M（注意4K对齐）
-BASE_PAGE_DIR   equ 0100000h
-; 页表存放基本地址 1M + 4K（注意4K对齐）
-BASE_PAGE_TABLE equ 0101000h
+; 页目录表存放基地址 0M（注意4K对齐）
+BASE_PAGE_DIR   equ 0000000h
+; 页表存放基本地址 0M + 4K（注意4K对齐）
+BASE_PAGE_TABLE equ 0001000h

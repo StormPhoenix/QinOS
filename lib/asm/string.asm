@@ -1,22 +1,23 @@
 [SECTION  .data]
-; 屏幕光标位置，初始位置在 [0, 0]
+; 屏幕光标位置，初始位置在 [17, 0]
 POINTER_POS:
     dd      (80 * 17 + 0) * 2
 
 [SECTION .text]
 
-global  copy_memory
+global  memory_copy
+global  memory_set
 global  print_string
 
 ; ------------------------------------------------
-; copy_memory
+; memory_copy
 ; 参数：
 ;   src     源位置，[esp + 4]
 ;   size    复制字节数量 [esp + 8]
 ;   dst     目标位置 [esp + 12]
 ; 描述：内存复制函数
 ; ------------------------------------------------
-copy_memory:
+memory_copy:
     push    ebp
     mov     ebp, esp
     push    esi
@@ -51,6 +52,46 @@ copy_memory:
     pop     esi
     pop     ebp
     ret
+
+
+; ------------------------------------------------
+; memory_set
+; 参数：
+;   dst     	源位置，[esp + 4]
+;   ch    		复制字节数量 [esp + 8]
+;   size    	目标位置 [esp + 12]
+; 描述：给内存设置值
+; ------------------------------------------------
+memory_set:
+	push	ebp
+	mov	    ebp, esp
+	push    esi
+	push    edx
+	push	ecx
+
+	; dst
+	mov 	esi, [ebp + 8]
+	; ch
+	mov 	edx, [ebp + 12]
+	; size
+	mov 	ecx, [ebp + 16]
+
+.1:
+	cmp		ecx, 0
+	jz		.2
+
+	mov		byte [ds:esi], dl
+	inc		esi
+
+	dec 	ecx
+	jmp 	.1
+
+.2:
+	pop		ecx
+	pop 	edx
+	pop  	esi
+	pop 	ebp
+	ret
 
 
 ; ------------------------------------------------
@@ -104,6 +145,10 @@ print_string:
 
 .over:
 	; 已经输出完毕
+	;cmp     edi, 1680
+	;ja      .1
+	;mov     edi, 0
+;.1:
 	mov		[POINTER_POS], edi
 
 	pop		ebx
@@ -111,3 +156,52 @@ print_string:
 	pop 	esi
 	pop 	ebp
 	ret
+
+
+; ------------------------------------------------
+; print_hex
+; 参数：
+;   num     字符串首地址 [esp + 4]
+; 描述：
+;   在屏幕光标位置输出16进制数字
+; ------------------------------------------------
+print_hex:
+	push	edx
+	push	edi
+	push	ecx
+
+	; 黑底白字
+	mov		ah, 0fh
+	mov		dl, al
+	mov		edi, [POINTER_POS]
+
+	; 先输出高4位
+	shr		al, 4
+	mov		ecx, 2
+
+.1:
+	and		al, 01111b
+	cmp		al, 9
+	ja		.2
+	add		al, '0'
+	jmp		.3
+
+.2:
+	; 数字比9大，说明要输出字母
+	sub		al, 0Ah
+	add		al, 'A'
+
+.3:
+	; 将ax放入显示缓冲区域，ah是显示属性，al是显示内容
+	mov		[gs:edi], ax
+	add 	edi, 2
+	mov		al, dl
+	loop	.1
+
+	mov		[POINTER_POS], edi
+
+	pop 	ecx
+	pop 	edi
+	pop		edx
+	ret
+
