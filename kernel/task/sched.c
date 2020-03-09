@@ -2,6 +2,7 @@
 #include "string.h"
 #include "task.h"
 #include "sched.h"
+#include "sys.h"
 #include "mm/mm.h"
 
 extern Task *task_table[];
@@ -28,7 +29,7 @@ char stack_b[USER_STACK_SIZE];
 char stack_c[USER_STACK_SIZE];
 char *task_stack[NR_TASK] = {0, stack_a, stack_b, stack_c};
 
-void initialize_schedule() {
+void sched_init() {
     // ldt
     memory_copy(&gdt[SELECTOR_KERNEL_CODE >> 3], sizeof(Descriptor), &(init_task.task.LDT[1]));
     init_task.task.LDT[1].attributes = CODE_ATTR386 | (DPL_USER << 5);
@@ -48,8 +49,8 @@ void initialize_schedule() {
     // TODO io_base
     init_task.task.tss.io_base = sizeof(init_task.task.tss);
     // 加载任务 0
-    load_task(FIRST_TSS_ENTRY << 3);
-    load_ldt(FIRST_LDT_ENTRY << 3);
+    ltr(0);
+    lldt(0);
 
     Task *task;
     // --------- 下面是测试进程 -----------

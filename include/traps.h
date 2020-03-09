@@ -48,5 +48,9 @@ void timer_interrupt(void);
  */
 void do_timer(long cpl);
 
+/**
+ * 设置 idt 表
+ */
+void trap_init();
 
 #endif

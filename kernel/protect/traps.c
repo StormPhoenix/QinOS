@@ -7,10 +7,11 @@
  */
 
 #include "bits.h"
-#include "traps.h"
 #include "protect.h"
-#include "string.h"
 #include "sched.h"
+#include "string.h"
+#include "sys.h"
+#include "traps.h"
 #include "type.h"
 
 
@@ -207,7 +208,7 @@ PRIVATE void setup_8259A() {
 
 
 // 设置IDT表
-void setup_idt() {
+void trap_init() {
     setup_8259A();
     // 设置外部中断
     set_idt_gate(INT_VECTOR_IRQ0 + 0, INTERRUPT_GATE, timer_interrupt, DPL_KERNEL);
@@ -249,6 +250,6 @@ void setup_idt() {
     // set idt_ptr
     *((u16 *) (&idt_ptr[0])) = IDT_SIZE * sizeof(Gate) - 1;
     (*(u32 *) (&idt_ptr[2])) = (u32) &idt;
-
+    lidt(idt_ptr);
     print_string("Finish setting the bitch idt!\n");
 }

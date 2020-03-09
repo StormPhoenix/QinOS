@@ -1,5 +1,6 @@
 #include "protect.h"
 #include "string.h"
+#include "sys.h"
 
 
 void setup_paging() {
@@ -9,6 +10,7 @@ void setup_paging() {
 
 
 void setup_gdt() {
+    sgdt(gdt_ptr);
     memory_set(gdt, 0, sizeof(Descriptor) * GDT_SIZE);
     // 将 gdt_ptr 指向的 gdt 赋值给这个文件中的 gdt
     memory_copy(
@@ -19,7 +21,7 @@ void setup_gdt() {
 
     *((u16 *) (&gdt_ptr[0])) = GDT_SIZE * sizeof(Descriptor) - 1;
     *((u32 *) (&gdt_ptr[2])) = (u32) &gdt;
-
+    lgdt(gdt_ptr);
     print_string("You superise mother-fucker!\n");
 }
 

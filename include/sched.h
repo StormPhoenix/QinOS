@@ -19,7 +19,7 @@ Task *current_task;
 // 进程表
 Task *task_table[NR_TASK];
 
-// Task 切换宏
+/** 任务切换 */
 #define switch_to(n) {\
     struct {long a, b;} __tmp;\
     __asm__(\
@@ -59,7 +59,7 @@ Task *task_table[NR_TASK];
  * TODO
  * 程序初始化 Task，前期用来坐测试，后期要改过来
  */
-void initialize_schedule();
+void sched_init();
 
 
 // TODO 测试代码要删掉

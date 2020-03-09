@@ -1,9 +1,3 @@
-extern	setup_gdt
-extern  setup_idt
-extern	gdt_ptr
-extern  idt_ptr
-extern  load_ldt
-extern  load_task
 extern  kernel_main
 
 SELECTOR_KERNEL_CODE 		equ 0x8
@@ -24,19 +18,8 @@ global  move_to_user_mode
 _start:
 	; 切换堆栈
 	mov 	esp, stack_top
-	; gdt 指针赋值
-	sgdt 	[gdt_ptr]
-	; gdt
-	call	setup_gdt
-	; 重加载 gdt
-	lgdt	[gdt_ptr]
-	; 设置 idt
-	call	setup_idt
-	lidt	[idt_ptr]
-
 	jmp 	SELECTOR_KERNEL_CODE:restart
 restart:
-	sti
 	jmp		kernel_main
 	jmp 	$
 
@@ -63,17 +46,4 @@ move_to_user_mode:
     mov     eax, 0x1b
     mov     gs, eax
     ret
-
-; 加载 tss
-load_task:
-    mov     eax, [esp + 4]
-    ltr     ax
-    ret
-
-
-; 加载 ldt
-load_ldt:
-     mov     eax, [esp + 4]
-     lldt    ax
-     ret
 

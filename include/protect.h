@@ -138,15 +138,6 @@ void setup_paging();
  */
 void setup_gdt();
 
-/**
- * 执行 ltr 指令
- */
-void load_task(u32 selector);
-
-/**
- * 执行 ldt 指令
- */
-void load_ldt(u32 selector);
 
 /**
  * 初始化 idt 表项
