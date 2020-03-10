@@ -3,6 +3,7 @@
 #include "task.h"
 #include "sched.h"
 #include "sys.h"
+#include "sys_call.h"
 #include "mm/mm.h"
 
 extern Task *task_table[];
@@ -95,6 +96,9 @@ void sched_init() {
                 SYS_ATTR386_TSS);
     }
     current_task = (Task *) &init_task;
+
+    // 设置系统调用
+    set_system_gate(INT_VECTOR_SYS_CALL, system_call);
 }
 
 
@@ -107,6 +111,11 @@ void schedule() {
     switch_to(task_no);
 }
 
+int sys_get_ticks() {
+    print_string("get ticks");
+    return 0;
+}
+
 /*======================================================================*
                                TestA
  *======================================================================*/
@@ -115,6 +124,8 @@ void TestA() {
     while (1) {
         print_string("A");
         print_string(".");
+        int ret_code = get_ticks();
+        print_hex(ret_code);
         delay();
     }
 }

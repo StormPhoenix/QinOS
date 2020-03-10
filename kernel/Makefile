@@ -2,11 +2,12 @@ include ../Makefile.variable
 
 CFLAGS		= -I ../include -c -fno-builtin
 
-OBJS		= kernel.o string_s.o string.o bits.o main.o traps.o interrupt.o protect.o sched.o
+OBJS		= kernel.o string_s.o string.o bits.o main.o traps.o interrupt.o protect.o sched.o sys_call.o
 
 TARGET		= kernel.bin
 
 all: $(TARGET)
+	rm -f $(OBJS)
 
 clean: 
 	rm -f $(OBJS)
@@ -41,3 +42,6 @@ protect.o:
 
 sched.o:
 	$(CC) -m32 $(CFLAGS) ./task/sched.c -o $@
+
+sys_call.o: ./task/sys_call.asm
+	$(AS) -f elf ./task/sys_call.asm -o $@

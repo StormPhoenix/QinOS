@@ -168,20 +168,8 @@ void exception_handler(int int_vector, unsigned int error_code, int eip, int cs,
 }
 
 
-void set_idt_gate(unsigned char vector, u8 type, int_handler handler, unsigned char dpl) {
-    Gate *gate_entry = &idt[vector];
-    // 偏移地址
-    u32 offset = (u32) handler;
-    gate_entry->offset_low = offset & 0x0000ffff;
-    gate_entry->selector = SELECTOR_KERNEL_CODE;
-    // TODO param_count 不可能全是0
-    gate_entry->param_count = 0;
-    gate_entry->attributs = (type & 0x0f) | ((dpl << 5) & 0x60) | 0x80;
-    gate_entry->offset_high = (offset >> 16) & 0x0ffff;
-}
 
-
-// 设置中断中断控制芯片
+/** 设置中断中断控制芯片 */
 PRIVATE void setup_8259A() {
     // 初始化8259A芯片
     // Master 8259，ICW1
@@ -211,42 +199,44 @@ PRIVATE void setup_8259A() {
 void trap_init() {
     setup_8259A();
     // 设置外部中断
-    set_idt_gate(INT_VECTOR_IRQ0 + 0, INTERRUPT_GATE, timer_interrupt, DPL_KERNEL);
-    set_idt_gate(INT_VECTOR_IRQ0 + 1, INTERRUPT_GATE, irq1, DPL_KERNEL);
-    set_idt_gate(INT_VECTOR_IRQ0 + 2, INTERRUPT_GATE, irq2, DPL_KERNEL);
-    set_idt_gate(INT_VECTOR_IRQ0 + 3, INTERRUPT_GATE, irq3, DPL_KERNEL);
-    set_idt_gate(INT_VECTOR_IRQ0 + 4, INTERRUPT_GATE, irq4, DPL_KERNEL);
-    set_idt_gate(INT_VECTOR_IRQ0 + 5, INTERRUPT_GATE, irq5, DPL_KERNEL);
-    set_idt_gate(INT_VECTOR_IRQ0 + 6, INTERRUPT_GATE, irq6, DPL_KERNEL);
-    set_idt_gate(INT_VECTOR_IRQ0 + 7, INTERRUPT_GATE, irq7, DPL_KERNEL);
-    set_idt_gate(INT_VECTOR_IRQ0 + 8, INTERRUPT_GATE, irq8, DPL_KERNEL);
-    set_idt_gate(INT_VECTOR_IRQ0 + 9, INTERRUPT_GATE, irq9, DPL_KERNEL);
-    set_idt_gate(INT_VECTOR_IRQ0 + 10, INTERRUPT_GATE, irq10, DPL_KERNEL);
-    set_idt_gate(INT_VECTOR_IRQ0 + 11, INTERRUPT_GATE, irq11, DPL_KERNEL);
-    set_idt_gate(INT_VECTOR_IRQ0 + 12, INTERRUPT_GATE, irq12, DPL_KERNEL);
-    set_idt_gate(INT_VECTOR_IRQ0 + 13, INTERRUPT_GATE, irq13, DPL_KERNEL);
-    set_idt_gate(INT_VECTOR_IRQ0 + 14, INTERRUPT_GATE, irq14, DPL_KERNEL);
-    set_idt_gate(INT_VECTOR_IRQ0 + 15, INTERRUPT_GATE, irq15, DPL_KERNEL);
+    set_intr_gate(INT_VECTOR_IRQ0 + 0, timer_interrupt);
+    set_intr_gate(INT_VECTOR_IRQ0 + 1, irq1);
+    set_intr_gate(INT_VECTOR_IRQ0 + 2, irq2);
+    set_intr_gate(INT_VECTOR_IRQ0 + 3, irq3);
+    set_intr_gate(INT_VECTOR_IRQ0 + 4, irq4);
+    set_intr_gate(INT_VECTOR_IRQ0 + 5, irq5);
+    set_intr_gate(INT_VECTOR_IRQ0 + 6, irq6);
+    set_intr_gate(INT_VECTOR_IRQ0 + 7, irq7);
+    set_intr_gate(INT_VECTOR_IRQ0 + 8, irq8);
+    set_intr_gate(INT_VECTOR_IRQ0 + 9, irq9);
+    set_intr_gate(INT_VECTOR_IRQ0 + 10, irq10);
+    set_intr_gate(INT_VECTOR_IRQ0 + 11, irq11);
+    set_intr_gate(INT_VECTOR_IRQ0 + 12, irq12);
+    set_intr_gate(INT_VECTOR_IRQ0 + 13, irq13);
+    set_intr_gate(INT_VECTOR_IRQ0 + 14, irq14);
+    set_intr_gate(INT_VECTOR_IRQ0 + 15, irq15);
 
     // 设置内部中断
-    set_idt_gate(INT_VECTOR_DIVIDE_ERROR, INTERRUPT_GATE, divide_error, DPL_KERNEL);
-    set_idt_gate(INT_VECTOR_DEBUG, INTERRUPT_GATE, debug, DPL_KERNEL);
-    set_idt_gate(INT_VECTOR_NMI, INTERRUPT_GATE, nmi, DPL_KERNEL);
-    set_idt_gate(INT_VECTOR_BREAKPOINT, INTERRUPT_GATE, breakpoint, DPL_KERNEL);
-    set_idt_gate(INT_VECTOR_OVERFLOW, INTERRUPT_GATE, overflow, DPL_KERNEL);
-    set_idt_gate(INT_VECTOR_BOUNDS, INTERRUPT_GATE, bounds, DPL_KERNEL);
-    set_idt_gate(INT_VECTOR_UD, INTERRUPT_GATE, undefine_opcode, DPL_KERNEL);
-    set_idt_gate(INT_VECTOR_DEV_NOT_AVAILABLE, INTERRUPT_GATE, device_not_available, DPL_KERNEL);
-    set_idt_gate(INT_VECTOR_DOUBLE_FAULT, INTERRUPT_GATE, double_fault, DPL_KERNEL);
-    set_idt_gate(INT_VECTOR_COPR_SEG_OVERRUN, INTERRUPT_GATE, coprocessor_segment_overrun, DPL_KERNEL);
-    set_idt_gate(INT_VECTOR_INVALID_TSS, INTERRUPT_GATE, invalid_tss, DPL_KERNEL);
-    set_idt_gate(INT_VECTOR_SEG_NOT_PRESENT, INTERRUPT_GATE, segment_not_present, DPL_KERNEL);
-    set_idt_gate(INT_VECTOR_STACK_ERROR, INTERRUPT_GATE, stack_error, DPL_KERNEL);
-    set_idt_gate(INT_VECTOR_GENERAL_PROTECTION, INTERRUPT_GATE, general_protection, DPL_KERNEL);
-    set_idt_gate(INT_VECTOR_PAGE_FAULT, INTERRUPT_GATE, page_fault, DPL_KERNEL);
-    set_idt_gate(INT_VECTOR_RESERVED, INTERRUPT_GATE, reserved, DPL_KERNEL);
-    set_idt_gate(INT_VECTOR_COPR_ERROR, INTERRUPT_GATE, coprocessor_error, DPL_KERNEL);
-    set_idt_gate(INT_VECTOR_ALIGN_CHECK, INTERRUPT_GATE, alignment_check, DPL_KERNEL);
+    set_intr_gate(INT_VECTOR_DIVIDE_ERROR, divide_error);
+    set_intr_gate(INT_VECTOR_DEBUG, debug);
+    set_intr_gate(INT_VECTOR_NMI, nmi);
+    set_intr_gate(INT_VECTOR_BREAKPOINT, breakpoint);
+    set_intr_gate(INT_VECTOR_OVERFLOW, overflow);
+    set_intr_gate(INT_VECTOR_BOUNDS, bounds);
+    set_intr_gate(INT_VECTOR_UD, undefine_opcode);
+    set_intr_gate(INT_VECTOR_DEV_NOT_AVAILABLE, device_not_available);
+    set_intr_gate(INT_VECTOR_DOUBLE_FAULT, double_fault);
+    set_intr_gate(INT_VECTOR_COPR_SEG_OVERRUN, coprocessor_segment_overrun);
+    set_intr_gate(INT_VECTOR_INVALID_TSS, invalid_tss);
+    set_intr_gate(INT_VECTOR_SEG_NOT_PRESENT, segment_not_present);
+    set_intr_gate(INT_VECTOR_STACK_ERROR, stack_error);
+    set_intr_gate(INT_VECTOR_GENERAL_PROTECTION, general_protection);
+    set_intr_gate(INT_VECTOR_PAGE_FAULT, page_fault);
+    set_intr_gate(INT_VECTOR_RESERVED, reserved);
+    set_intr_gate(INT_VECTOR_COPR_ERROR, coprocessor_error);
+    set_intr_gate(INT_VECTOR_ALIGN_CHECK, alignment_check);
+
+
     // set idt_ptr
     *((u16 *) (&idt_ptr[0])) = IDT_SIZE * sizeof(Gate) - 1;
     (*(u32 *) (&idt_ptr[2])) = (u32) &idt;

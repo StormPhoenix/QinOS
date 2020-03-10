@@ -53,4 +53,25 @@
 }
 
 
+/** 调入内核态 */
+#define move_to_user_mode() \
+    __asm__( \
+        "movl   %%esp, %%eax\n\t" \
+        "pushl  $0x17\n\t" \
+        "pushl  %%eax\n\t" \
+        "pushfl\n\t" \
+        "pushl  $0x0f\n\t" \
+        "pushl  $1f\n\t" \
+        "iret\n" \
+        "1:\n\t" \
+        "movl   $0x17, %%eax\n\t" \
+        "movl   %%eax, %%ds\n\t" \
+        "movl   %%eax, %%es\n\t" \
+        "movl   %%eax, %%fs\n\t" \
+        "movl   $0x1b, %%eax\n\t" \
+        "movl   %%eax, %%gs\n\t" \
+        ::: "ax" \
+    )
+
+
 #endif

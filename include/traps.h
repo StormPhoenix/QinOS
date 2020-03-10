@@ -26,6 +26,9 @@
 #define INT_VECTOR_IRQ0                 0x20
 #define INT_VECTOR_IRT8                 0x28
 
+// 系统调用中断
+#define INT_VECTOR_SYS_CALL             0x70
+
 // 外部中断向量在 8259A 上面的引脚
 #define IRQ_CLOCK                       0
 

@@ -12,7 +12,6 @@ stack_top:
 [SECTION .text]
 
 global	_start
-global  move_to_user_mode
 
 
 _start:
@@ -22,28 +21,3 @@ _start:
 restart:
 	jmp		kernel_main
 	jmp 	$
-
-
-; 跳转到用户态
-move_to_user_mode:
-    mov     eax, esp
-	; ss 入栈
-	push    0x17
-	; esp 入栈
-	push    eax
-	; eflags 入栈
-	pushf
-	; cs 入栈
-	push    0x0f
-	; eip 入栈
-	push    .1
-	iret
-.1:
-    mov     eax, 0x17
-    mov     ds, eax
-    mov     es, eax
-    mov     fs, eax
-    mov     eax, 0x1b
-    mov     gs, eax
-    ret
-

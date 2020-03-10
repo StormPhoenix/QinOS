@@ -128,6 +128,20 @@ u8 gdt_ptr[6];
 // idt 指针，i386用于加载IDT
 u8 idt_ptr[6];
 
+#define __set_gate__(gate_addr, type, dpl, addr) \
+    __asm__( \
+        "movw   %%dx, %%ax\n\t" \
+        "movw   %0, %%dx\n\t" \
+        "movl   %%eax, %1\n\t" \
+        "movl   %%edx, %2\n\t" \
+        : \
+        : "i" ((short) (0x8000 + (dpl << 13) + (type << 8))), \
+        "o" (*((char *) (gate_addr))), \
+        "o" (*((char *) (gate_addr) + 4)), \
+        "d" ((char *) (addr)), "a" (0x00080000) \
+        ) \
+
+
 /**
  * 设置分页相关的数据结构
  */
@@ -140,14 +154,22 @@ void setup_gdt();
 
 
 /**
- * 初始化 idt 表项
+ * 设置中断门
  * @param vector       中断向量号
- * @param type         门类型
- * @param handler      中断处理函数指针
- * @param dpl          等级
+ * @param addr      中断执行函数
+ * @param dpl       特权级
  */
-void set_idt_gate(unsigned char vector, u8 type, int_handler handler, unsigned char dpl);
+#define set_intr_gate(vector, addr) \
+    __set_gate__(&idt[vector], INTERRUPT_GATE, DPL_KERNEL, addr)
 
+/** 设置陷阱门 */
+#define set_trap_gate(vector, addr) \
+    __set_gate__(&idt[vector], TRAP_GATE, DPL_KERNEL, addr)
+
+
+/** 设置系统陷阱门 */
+#define set_system_gate(vector, addr) \
+    __set_gate__(&idt[vector], TRAP_GATE, DPL_USER, addr)
 
 /**
  *
