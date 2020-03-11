@@ -6,12 +6,13 @@
  * 里的实现函数
  */
 
+#include "asm/system.h"
 #include "bits.h"
-#include "protect.h"
+#include "pm.h"
 #include "sched.h"
 #include "string.h"
-#include "sys.h"
 #include "traps.h"
+#include "intr.h"
 #include "type.h"
 
 
@@ -118,7 +119,7 @@ void do_timer(long dpl) {
  */
 void hardware_interrupt_handler(int int_vector) {
     // TODO 默认处理，以后还要修改的
-    print_string("Hardware protect occur\n");
+    print_string("Hardware intr occur\n");
 }
 
 

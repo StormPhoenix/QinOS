@@ -11,6 +11,10 @@
 #include "type.h"
 #include "mm/mm.h"
 
+/** 特权级数值 */
+#define DPL_USER            3
+#define DPL_KERNEL          0
+
 // 内核代码段选择符
 #define SELECTOR_KERNEL_CODE    0x8
 // 内核数据段选择符
@@ -18,21 +22,6 @@
 // 内核显存区域选择符号
 #define SELECTOR_VIDEO          0x18
 
-
-// 门类型
-/**
- * IDT 表只有三个类型的 Gate，
- * Trap Gate 和 Interrupt Gate 的区别是对 EFLAGS 中的 IF 标志。
- * IF 标志用来屏蔽其他中断的。这意味这 Trap Gate 会被打断，而 Interrupt Gate 不会
- */
-#define CALL_GATE           (u8)12
-#define TRAP_GATE           (u8)15
-#define INTERRUPT_GATE      (u8)14
-#define TASK_GATE           (u8)5
-
-/** 特权级数值 */
-#define DPL_USER            3
-#define DPL_KERNEL          0
 
 /** 请求特权级数值 */
 #define RPL_USER            3
@@ -111,10 +100,12 @@ typedef struct gate {
 #define MAX_LDT_SIZE    3
 #define NR_IRQ          16
 
+/** 第一个任务的 TSS、LDT */
 #define FIRST_TSS_ENTRY     4
 #define FIRST_LDT_ENTRY     FIRST_TSS_ENTRY + 1
+
+/** 计算第n个任务的 TSS、LDT 段选择符的偏移值 */
 #define _TSS(n)     ((((u32) n) << 4) + (FIRST_TSS_ENTRY << 3))
-// 计算第n个任务的LDT段选择符的偏移值
 #define _LDT(n)     ((((u32) n) << 4) + (FIRST_LDT_ENTRY << 3))
 
 // gdt 表
@@ -127,58 +118,6 @@ u32 *page_dir;
 u8 gdt_ptr[6];
 // idt 指针，i386用于加载IDT
 u8 idt_ptr[6];
-
-#define __set_gate__(gate_addr, type, dpl, addr) \
-    __asm__( \
-        "movw   %%dx, %%ax\n\t" \
-        "movw   %0, %%dx\n\t" \
-        "movl   %%eax, %1\n\t" \
-        "movl   %%edx, %2\n\t" \
-        : \
-        : "i" ((short) (0x8000 + (dpl << 13) + (type << 8))), \
-        "o" (*((char *) (gate_addr))), \
-        "o" (*((char *) (gate_addr) + 4)), \
-        "d" ((char *) (addr)), "a" (0x00080000) \
-        ) \
-
-
-/**
- * 设置分页相关的数据结构
- */
-void setup_paging();
-
-/**
- * 给gdt数据结构赋值
- */
-void setup_gdt();
-
-
-/**
- * 设置中断门
- * @param vector       中断向量号
- * @param addr      中断执行函数
- * @param dpl       特权级
- */
-#define set_intr_gate(vector, addr) \
-    __set_gate__(&idt[vector], INTERRUPT_GATE, DPL_KERNEL, addr)
-
-/** 设置陷阱门 */
-#define set_trap_gate(vector, addr) \
-    __set_gate__(&idt[vector], TRAP_GATE, DPL_KERNEL, addr)
-
-
-/** 设置系统陷阱门 */
-#define set_system_gate(vector, addr) \
-    __set_gate__(&idt[vector], TRAP_GATE, DPL_USER, addr)
-
-/**
- *
- * @param descriptor
- * @param base
- * @param limit
- * @param attributes
- */
-void set_gdt_descriptor(Descriptor *descriptor, u32 base, u32 limit, u16 attributes);
 
 
 /**
@@ -197,10 +136,5 @@ u32 segment_to_linear_addr(u16 selector);
  */
 u32 virtual_to_linear_addr(u16 selector, u32 offset);
 
-
-/**
- * 从内核态跳入用户态
- */
-void move_to_user_mode();
 
 #endif

@@ -2,7 +2,7 @@ include ../Makefile.variable
 
 CFLAGS		= -I ../include -c -fno-builtin
 
-OBJS		= kernel.o string_s.o string.o bits.o main.o traps.o interrupt.o protect.o sched.o sys_call.o
+OBJS		= kernel.o string_s.o string.o bits.o main.o traps.o interrupt.o pm.o sched.o sys_call.o
 
 TARGET		= kernel.bin
 
@@ -28,17 +28,17 @@ string_s.o: ../lib/asm/string.asm
 bits.o: ../lib/asm/bits.asm
 	$(AS) -f elf ../lib/asm/bits.asm -o $@
 
-main.o: main.c
-	$(CC) -m32 $(CFLAGS) main.c -o $@
+main.o: ../init/main.c
+	$(CC) -m32 $(CFLAGS) ../init/main.c -o $@
 
-interrupt.o: ./protect/interrupt.asm
-	$(AS) -f elf ./protect/interrupt.asm -o $@
+interrupt.o: ./intr/interrupt.asm
+	$(AS) -f elf ./intr/interrupt.asm -o $@
 
-traps.o:
-	$(CC) -m32 $(CFLAGS) ./protect/traps.c -o $@
+traps.o: ./intr/traps.c
+	$(CC) -m32 $(CFLAGS) ./intr/traps.c -o $@
 
-protect.o:
-	$(CC) -m32 $(CFLAGS) ./protect/protect.c -o $@
+pm.o: ./pm.c
+	$(CC) -m32 $(CFLAGS) ./pm.c -o $@
 
 sched.o:
 	$(CC) -m32 $(CFLAGS) ./task/sched.c -o $@

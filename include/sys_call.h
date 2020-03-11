@@ -40,7 +40,7 @@ type name() { \
     return (long) __res; \
 }
 
-// TODO 测试系统调用
+// TODO 测试系统调用 get_ticks
 __syscall0__(long, get_ticks)
 
 /** 系统调用入口 */

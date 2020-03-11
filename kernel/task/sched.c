@@ -1,8 +1,8 @@
-#include "protect.h"
+#include "asm/system.h"
+#include "pm.h"
 #include "string.h"
 #include "task.h"
 #include "sched.h"
-#include "sys.h"
 #include "sys_call.h"
 #include "mm/mm.h"
 
@@ -39,14 +39,13 @@ void sched_init() {
 
     task_table[0] = (Task *) &init_task;
     // tss entry
-    set_gdt_descriptor(&gdt[FIRST_TSS_ENTRY],
-                       virtual_to_linear_addr(SELECTOR_KERNEL_DATA, (u32) &(init_task.task.tss)),
-                       sizeof(init_task.task.tss) - 1, SYS_ATTR386_TSS);
+    set_tss_desc(FIRST_TSS_ENTRY,
+                 virtual_to_linear_addr(SELECTOR_KERNEL_DATA, (u32) &(init_task.task.tss)));
     // ldt entry
-    set_gdt_descriptor(&gdt[FIRST_LDT_ENTRY],
-                       virtual_to_linear_addr(SELECTOR_KERNEL_DATA, (u32) &(init_task.task.LDT)),
-                       sizeof(init_task.task.LDT) - 1,
-                       SYS_ATTR386_LDT);
+    set_gdt_desc(FIRST_LDT_ENTRY,
+                 virtual_to_linear_addr(SELECTOR_KERNEL_DATA, (u32) &(init_task.task.LDT)),
+                 sizeof(init_task.task.LDT) - 1,
+                 SYS_ATTR386_LDT);
     // TODO io_base
     init_task.task.tss.io_base = sizeof(init_task.task.tss);
     // 加载任务 0
@@ -75,11 +74,10 @@ void sched_init() {
         task->tss.esp0 = (u32) task + PAGE_SIZE;
         task->tss.eflags = 0x0202;
         // 初始化 gdt LDT entry、LDT selector
-        set_gdt_descriptor(
-                &gdt[FIRST_LDT_ENTRY + i * 2],
+        set_ldt_desc(
+                FIRST_LDT_ENTRY + i * 2,
                 virtual_to_linear_addr(SELECTOR_KERNEL_DATA, (u32) &(task->LDT)),
-                sizeof(task->LDT) - 1,
-                SYS_ATTR386_LDT);
+                sizeof(task->LDT) - 1);
 
         task->tss.ldt = _LDT(i);
         // 初始化 LDT
@@ -89,11 +87,9 @@ void sched_init() {
         task->LDT[2].attributes = DATA_ATTR386_RW | (DPL_USER << 5);
 
         // 初始化 gdt TSS entry
-        set_gdt_descriptor(
-                &gdt[FIRST_TSS_ENTRY + i * 2],
-                virtual_to_linear_addr(SELECTOR_KERNEL_DATA, (u32) &(task->tss)),
-                sizeof(task->tss) - 1,
-                SYS_ATTR386_TSS);
+        set_tss_desc(
+                FIRST_TSS_ENTRY + i * 2,
+                virtual_to_linear_addr(SELECTOR_KERNEL_DATA, (u32) &(task->tss)));
     }
     current_task = (Task *) &init_task;
 

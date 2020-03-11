@@ -2,7 +2,7 @@
 #define _TASK_H_
 
 #include "type.h"
-#include "protect.h"
+#include "pm.h"
 
 
 typedef struct task_state_segment {
@@ -40,12 +40,12 @@ typedef struct task_state_segment {
     u16 io_base;
 } TSS;
 
-#define KERNEL_STACK_SIZE   1024
 
 typedef struct task_struct {
     TSS tss;
     Descriptor LDT[MAX_LDT_SIZE];
     long task_id;
+    long jiffies;
 } Task;
 
 

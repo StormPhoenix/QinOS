@@ -9,7 +9,7 @@
 
 #include "task.h"
 #include "mm/mm.h"
-#include "protect.h"
+#include "pm.h"
 
 // 同时存在的进程最大数量
 #define NR_TASK   4
@@ -18,21 +18,6 @@
 Task *current_task;
 // 进程表
 Task *task_table[NR_TASK];
-
-/** 任务切换 */
-#define switch_to(n) {\
-    struct {long a, b;} __tmp;\
-    __asm__(\
-        "cmpl %%ecx, current_task\n\t" \
-        "je 1f\n\t" \
-        "movw %%dx, %1\n\t" \
-        "xchgl %%ecx, current_task\n\t" \
-        "ljmp *%0 \n\t" \
-        "1:" \
-        ::"m" (*&__tmp.a), "m" (*&__tmp.b),\
-        "d" (_TSS(n)), "c" ((long) task_table[n])\
-    );\
-}
 
 
 // OS 中第一个 Task
@@ -51,6 +36,8 @@ Task *task_table[NR_TASK];
         {0, 0}, \
     },\
     /* task_id */ \
+    0,\
+    /* jiffies */ \
     0 \
 }
 
