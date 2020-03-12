@@ -8,6 +8,7 @@ sturct.txt
 todo.txt
 
 # clion
+.idea/
 /cmake-build-debug
 CMakeLists.txt
 
