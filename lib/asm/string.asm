@@ -145,10 +145,10 @@ print_string:
 
 .over:
 	; 已经输出完毕
-	;cmp     edi, 1680
-	;ja      .1
-	;mov     edi, 0
-;.1:
+	cmp     edi, 4080
+	jb      .1
+	mov     edi, 0
+.1:
 	mov		[POINTER_POS], edi
 
 	pop		ebx

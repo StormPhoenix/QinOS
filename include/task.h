@@ -44,8 +44,14 @@ typedef struct task_state_segment {
 typedef struct task_struct {
     TSS tss;
     Descriptor LDT[MAX_LDT_SIZE];
+    /* 进程id */
     long task_id;
-    long jiffies;
+    /* 开始运行时间 */
+    long start_time;
+    /* 优先级 */
+    long priority;
+    /* 剩余时间片 */
+    long counter;
 } Task;
 
 

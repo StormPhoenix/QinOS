@@ -37,8 +37,12 @@ Task *task_table[NR_TASK];
     },\
     /* task_id */ \
     0,\
-    /* jiffies */ \
-    0 \
+    /* start_time */ \
+    0, \
+    /* priority */ \
+    50, \
+    /* counter */ \
+    50 \
 }
 
 

@@ -1,5 +1,18 @@
 *.bin
 *.img
+*.o
+backup.asm
+build.sh
+linux_build.sh
+sturct.txt
+todo.txt
+
+# clion
+/cmake-build-debug
+CMakeLists.txt
+
+# vscode
+.vscode/
 
 # Mac
 .DS_Store

@@ -104,8 +104,13 @@ void do_divide_error(int int_vector, int error_code, int eip, int cs, int eflags
     // TODO
 }
 
-
+/*
+ * 如果 do_timer 被重新入的话，可能会发生问题
+ * current_task->counter-- 的值可能会变成 < 0
+ * do_timer 不应该被设计成可重入的
+ * */
 void do_timer(long dpl) {
+    current_task->counter--;
     schedule();
 }
 

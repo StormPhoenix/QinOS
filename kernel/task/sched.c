@@ -90,6 +90,12 @@ void sched_init() {
         set_tss_desc(
                 FIRST_TSS_ENTRY + i * 2,
                 virtual_to_linear_addr(SELECTOR_KERNEL_DATA, (u32) &(task->tss)));
+
+        // task property
+        task->task_id = i;
+        task->start_time = 0;
+        task->priority = 30;
+        task->counter = task->priority;
     }
     current_task = (Task *) &init_task;
 
@@ -99,12 +105,28 @@ void sched_init() {
 
 
 void schedule() {
-    static int task_no = 1;
-    task_no++;
-    if (task_no >= NR_TASK) {
-        task_no = 0;
+    int next = -1;
+    int max_counter = -1;
+    while (1) {
+        for (int i = 0; i < NR_TASK; i++) {
+            Task *task = task_table[i];
+            if (task != 0 && task->counter > max_counter) {
+                max_counter = task->counter;
+                next = i;
+            }
+        }
+
+        if (max_counter != 0) {
+            break;
+        }
+
+        for (int i = 0; i < NR_TASK; i++) {
+            if (task_table[i] != 0) {
+                task_table[i]->counter = task_table[i]->counter / 2 + task_table[i]->priority;
+            }
+        }
     }
-    switch_to(task_no);
+    switch_to(next);
 }
 
 int sys_get_ticks() {
@@ -116,12 +138,12 @@ int sys_get_ticks() {
                                TestA
  *======================================================================*/
 void TestA() {
-    int i = 0;
+    int i = 1;
     while (1) {
         print_string("A");
-        print_string(".");
-        int ret_code = get_ticks();
-        print_hex(ret_code);
+        print_hex(i);
+        print_string("\n");
+        i ++;
         delay();
     }
 }
@@ -130,10 +152,12 @@ void TestA() {
                                TestB
  *======================================================================*/
 void TestB() {
-    int i = 0x1000;
+    int i = 1;
     while (1) {
         print_string("B");
-        print_string(".");
+        print_hex(i);
+        print_string("\n");
+        i ++;
         delay();
     }
 }
@@ -142,10 +166,12 @@ void TestB() {
                                TestB
  *======================================================================*/
 void TestC() {
-    int i = 0x2000;
+    int i = 1;
     while (1) {
         print_string("C");
-        print_string(".");
+        print_hex(i);
+        print_string("\n");
+        i++;
         delay();
     }
 }
@@ -153,7 +179,7 @@ void TestC() {
 void delay() {
     for (int i = 0; i < 10000; i++) {
         for (int j = 0; j < 1000; j++) {
-
+            // nothing
         }
     }
 }

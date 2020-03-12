@@ -6,6 +6,7 @@
 #include "bits.h"
 #include "pm.h"
 #include "sched.h"
+#include "string.h"
 #include "traps.h"
 
 
@@ -47,8 +48,12 @@ void kernel_main() {
     // 跳入用户态，Task main() 将成为 OS 的第一个 Task
     print_string("enter user mode\n");
     move_to_user_mode();
+    int i = 1;
     while (1) {
-        print_string("main task\n");
+        print_string("main task");
+        print_hex(i);
+        print_string("\n");
+        i ++;
         delay();
     }
 }
