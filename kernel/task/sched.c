@@ -2,12 +2,12 @@
 #include "bits.h"
 #include "console.h"
 #include "global.h"
+#include "mm/mm.h"
 #include "pm.h"
 #include "sched.h"
 #include "string.h"
 #include "sys_call.h"
 #include "task.h"
-#include "mm/mm.h"
 
 extern Task *task_table[];
 extern Task *current_task;
@@ -17,6 +17,8 @@ typedef union task_union {
     Task task;
     char stack[PAGE_SIZE];
 } TaskUnion;
+
+void setup_8253();
 
 // OS 中第一个进程
 TaskUnion init_task = {INIT_TASK};
@@ -103,10 +105,19 @@ void sched_init() {
         task->counter = task->priority;
     }
     current_task = (Task *) &init_task;
-
     // 设置系统调用
     set_system_gate(INT_VECTOR_SYS_CALL, system_call);
+    // 设置 100 ms 频率的时钟
+    setup_8253();
+}
 
+
+/** 设置 100ms频率的时钟，这部分代码从其他地方复制过来的，基本上用一次就不会用了，不用过多在意 */
+void setup_8253() {
+    // 初始化 8253 PIT
+    out_byte(0x43, 0x34);
+    out_byte(0x40, (u8) (1193182L / 100));
+    out_byte(0x40, (u8) ((1193182L / 100) >> 8));
     // 开启时钟中断
     enable_irq(IRQ_CLOCK);
 }
@@ -136,6 +147,7 @@ void schedule() {
     }
     switch_to(next);
 }
+
 
 int sys_get_ticks() {
     print_string("get ticks");

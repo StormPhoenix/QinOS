@@ -13,7 +13,6 @@ void do_keyboard() {
 //    print_hex(keyboard_buffer.size);
 //    print_hex(next);
     if (next != keyboard_buffer.tail) {
-        // TODO 这里的code应该转化一下吧
         keyboard_buffer.buffer[next] = code;
         keyboard_buffer.head = next;
     } else {

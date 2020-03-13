@@ -7,8 +7,6 @@
 
 
 #include "intr.h"
-
-// TODO delete pm.h header
 #include "pm.h"
 
 
