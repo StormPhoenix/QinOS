@@ -1,6 +1,6 @@
 extern  exception_handler
 extern  hardware_interrupt_handler
-extern  do_timer
+extern  do_timer, do_keyboard
 
 [SECTION .text]
 
@@ -8,16 +8,12 @@ global  divide_error, debug, nmi, breakpoint, overflow, bounds
 global  undefine_opcode, device_not_available, double_fault, coprocessor_segment_overrun
 global  invalid_tss, segment_not_present, stack_error, general_protection
 global  page_fault, reserved, coprocessor_error, alignment_check
-global  timer_interrupt
+global  timer_interrupt, keyboard_interrupt
 global  irq0, irq1, irq2, irq3, irq4, irq5, irq6, irq7, irq8
 global  irq9, irq10, irq11, irq12, irq13, irq14, irq15
 
 
 ; 时钟中断
-irq0:
-    iretd
-
-
 timer_interrupt:
     ; 保存寄存器
     push    ds
@@ -60,9 +56,39 @@ timer_interrupt:
     iretd
 
 
-irq1:
-	push 	1
-	jmp 	hardware_interrupt
+; 键盘中断
+keyboard_interrupt:
+; 保存寄存器
+    push    ds
+    push    es
+    push    fs
+    push    edx
+    push    ecx
+    push    ebx
+    push    eax
+
+    ; 让段寄存器指向内核
+    mov     eax, 0x10
+    mov     ds, eax
+    mov     es, eax
+    ; fs 指向程序数据段
+    mov     eax, 0x17
+    mov     fs, eax
+
+    ; 告知8259A结束该硬件中断
+    mov     al, 0x20
+    out     0x20, al
+
+    call    do_keyboard
+
+    pop     eax
+    pop     ebx
+    pop     ecx
+    pop     edx
+    pop     fs
+    pop     es
+    pop     ds
+    iretd
 
 
 irq2:

@@ -4,9 +4,17 @@ ifeq ($(PLATFORM), "macOS")
     AS			= nasm
     LD			= i386-elf-ld
     CC			= i386-elf-gcc
+    MOUNT		= hdiutil mount ./boot.img
+    CP_LOADER   = cp loader.bin /Volumes/fuck\ \ virus/
+    CP_KERNEL   = cp kernel.bin /Volumes/fuck\ \ virus/
+    UMOUNT		= hdiutil eject /Volumes/fuck\ \ virus
 else ifeq ($(PLATFORM), "ubuntu")
     AS          = nasm
     LD          = ld
     CC          = gcc
+    MOUNT		= mount -o loop ./boot.img /mnt/floppy
+    CP_LOADER   = cp loader.bin /mnt/floppy
+    CP_KERNEL   = cp kernel.bin /mnt/floppy
+    UMOUNT		= umount /mnt/floppy
 endif
 # macOS

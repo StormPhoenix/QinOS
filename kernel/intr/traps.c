@@ -15,6 +15,11 @@
 #include "intr.h"
 #include "type.h"
 
+/** 外部中断函数 */
+extern void timer_interrupt();
+
+extern void keyboard_interrupt();
+
 
 // -------- i386 中断处理函数 --------
 /**
@@ -65,12 +70,6 @@ void alignment_check(void);
 void exception(void);
 
 // -------- 外部中断处理函数 --------
-
-// 时钟中断
-void irq0(void);
-
-void irq1(void);
-
 void irq2(void);
 
 void irq3(void);
@@ -99,10 +98,6 @@ void irq14(void);
 
 void irq15(void);
 
-
-void do_divide_error(int int_vector, int error_code, int eip, int cs, int eflags) {
-    // TODO
-}
 
 /*
  * 如果 do_timer 被重新入的话，可能会发生问题
@@ -174,7 +169,6 @@ void exception_handler(int int_vector, unsigned int error_code, int eip, int cs,
 }
 
 
-
 /** 设置中断中断控制芯片 */
 PRIVATE void setup_8259A() {
     // 初始化8259A芯片
@@ -206,7 +200,7 @@ void trap_init() {
     setup_8259A();
     // 设置外部中断
     set_intr_gate(INT_VECTOR_IRQ0 + 0, timer_interrupt);
-    set_intr_gate(INT_VECTOR_IRQ0 + 1, irq1);
+    set_intr_gate(INT_VECTOR_IRQ0 + 1, keyboard_interrupt);
     set_intr_gate(INT_VECTOR_IRQ0 + 2, irq2);
     set_intr_gate(INT_VECTOR_IRQ0 + 3, irq3);
     set_intr_gate(INT_VECTOR_IRQ0 + 4, irq4);

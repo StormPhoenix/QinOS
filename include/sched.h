@@ -12,7 +12,7 @@
 #include "pm.h"
 
 // 同时存在的进程最大数量
-#define NR_TASK   4
+#define NR_TASK   5
 
 // 当前运行进程
 Task *current_task;
@@ -61,6 +61,8 @@ void TestA();
 void TestB();
 
 void TestC();
+
+void tty_task();
 
 
 /**

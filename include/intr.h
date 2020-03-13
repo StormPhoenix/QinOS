@@ -31,6 +31,7 @@
 
 /** 外部中断向量在 8259A 上面的引脚 */
 #define IRQ_CLOCK                       0
+#define IRQ_KEYBOARD                    1
 
 
 /** 8295A 芯片的 in、out 端口 */

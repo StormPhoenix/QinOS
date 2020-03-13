@@ -1,32 +1,38 @@
 include Makefile.variable
 
-BOOT 		= boot/boot.bin boot/loader.bin
-KERNEL		= kernel/kernel.bin
+BOOT 		= boot.bin
+LOADER		= loader.bin
+KERNEL		= kernel.bin
 
 .PHONY: all clean
 
 # Default
-all: $(BOOT) $(KERNEL)
-
-# build image
-build: all
+all: $(BOOT) $(LOADER) $(KERNEL)
 	cp ./boot_backup.img ./boot.img
-	dd if=boot/boot.bin of=./boot.img bs=512 count=1 conv=notrunc
-	mount -o loop ./boot.img /mnt/floppy
-	cp  boot/loader.bin /mnt/floppy
-	cp 	kernel/kernel.bin /mnt/floppy
-	umount /mnt/floppy
+	dd if=boot.bin of=./boot.img bs=512 count=1 conv=notrunc
+	$(MOUNT)
+	$(CP_LOADER)
+	$(CP_KERNEL)
+	$(UMOUNT)
+	rm -f $(BOOT)
+	rm -f $(LOADER)
+	rm -f $(KERNEL)
 
 # Clean output files
 clean:
 	@make clean -C boot
 	@make clean -C kernel
+	rm -f $(BOOT)
+	rm -f $(KERNEL)
 
-boot/boot.bin: 
-	@make boot -C boot
+boot.bin:
+	@make boot.bin -C boot
+	mv ./boot/boot.bin ./
 
-boot/loader.bin:
-	@make loader -C boot
+loader.bin:
+	@make loader.bin -C boot
+	mv ./boot/loader.bin ./
 
-kernel/kernel.bin:	
+kernel.bin:
 	@make -C kernel
+	mv ./kernel/kernel.bin ./

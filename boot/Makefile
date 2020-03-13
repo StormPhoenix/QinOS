@@ -16,9 +16,6 @@ clean:
 boot.bin: boot.asm include/fat12.inc
 	$(AS) $(AS_FLAGS) -o $@ $<
 
-boot: boot.bin
-
 loader.bin: loader.asm include/fat12.inc include/pm.inc include/boot.inc
 	$(AS) $(AS_FLAGS) -o $@ $<
 
-loader: loader.bin

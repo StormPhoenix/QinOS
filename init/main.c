@@ -3,7 +3,8 @@
 */
 
 #include "asm/system.h"
-#include "bits.h"
+#include "console.h"
+#include "global.h"
 #include "pm.h"
 #include "sched.h"
 #include "string.h"
@@ -37,23 +38,27 @@ void setup_gdt() {
 // 主函数入口
 void kernel_main() {
     setup_gdt();
+    // 初始化中断
     trap_init();
+    // 开启中断
     sti();
     // 初始化 OS 第一个进程
     setup_paging();
     // 初始化调度
     sched_init();
-    // 开启时钟中断
-    enable_irq(IRQ_CLOCK);
+    // 初始化键盘
+    keyboard_init();
     // 跳入用户态，Task main() 将成为 OS 的第一个 Task
-    print_string("enter user mode\n");
     move_to_user_mode();
+    print_string("enter user mode\n");
     int i = 1;
     while (1) {
+#ifdef _DEBUG_
         print_string("main task");
-        print_hex(i);
         print_string("\n");
-        i ++;
+        print_hex(i);
+#endif
+        i++;
         delay();
     }
 }

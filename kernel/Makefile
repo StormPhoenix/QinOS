@@ -2,7 +2,7 @@ include ../Makefile.variable
 
 CFLAGS		= -I ../include -c -fno-builtin
 
-OBJS		= kernel.o string_s.o string.o bits.o main.o traps.o interrupt.o pm.o sched.o sys_call.o
+OBJS		= kernel.o string_s.o string.o bits.o main.o traps.o interrupt.o pm.o sched.o sys_call.o console.o
 
 TARGET		= kernel.bin
 
@@ -45,3 +45,6 @@ sched.o:
 
 sys_call.o: ./task/sys_call.asm
 	$(AS) -f elf ./task/sys_call.asm -o $@
+
+console.o: console.c
+	$(CC) -m32 $(CFLAGS) ./console.c -o $@

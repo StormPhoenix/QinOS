@@ -22,3 +22,5 @@
 
 - [ ] invalid instruction suffix for `mov'
 "movw   %%bx, %0\n\t"
+
+- [ ] sti() 指令移动位置导致 #GP

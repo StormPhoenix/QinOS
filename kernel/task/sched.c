@@ -1,9 +1,12 @@
 #include "asm/system.h"
+#include "bits.h"
+#include "console.h"
+#include "global.h"
 #include "pm.h"
-#include "string.h"
-#include "task.h"
 #include "sched.h"
+#include "string.h"
 #include "sys_call.h"
+#include "task.h"
 #include "mm/mm.h"
 
 extern Task *task_table[];
@@ -18,17 +21,19 @@ typedef union task_union {
 // OS 中第一个进程
 TaskUnion init_task = {INIT_TASK};
 
-
 // TODO 暂时缓存三个进程Task结构
 TaskUnion test_task_union[NR_TASK];
 // TODO 暂时缓存三个进程的执行函数
-task_function task_eip[NR_TASK] = {0, TestA, TestC, TestB};
+task_function task_eip[NR_TASK] = {0, TestA, TestC, TestB, tty_task};
+//task_function task_eip[NR_TASK] = {0, TestA, TestC, TestB};
 // TODO 三个进程的堆栈
 #define USER_STACK_SIZE     1024
 char stack_a[USER_STACK_SIZE];
 char stack_b[USER_STACK_SIZE];
 char stack_c[USER_STACK_SIZE];
-char *task_stack[NR_TASK] = {0, stack_a, stack_b, stack_c};
+char stack_tty[USER_STACK_SIZE];
+char *task_stack[NR_TASK] = {0, stack_a, stack_b, stack_c, stack_tty};
+//char *task_stack[NR_TASK] = {0, stack_a, stack_b, stack_c};
 
 void sched_init() {
     // ldt
@@ -101,6 +106,9 @@ void sched_init() {
 
     // 设置系统调用
     set_system_gate(INT_VECTOR_SYS_CALL, system_call);
+
+    // 开启时钟中断
+    enable_irq(IRQ_CLOCK);
 }
 
 
@@ -140,10 +148,12 @@ int sys_get_ticks() {
 void TestA() {
     int i = 1;
     while (1) {
+#ifdef _DEBUG_
         print_string("A");
         print_hex(i);
         print_string("\n");
-        i ++;
+#endif
+        i++;
         delay();
     }
 }
@@ -154,10 +164,12 @@ void TestA() {
 void TestB() {
     int i = 1;
     while (1) {
+#ifdef _DEBUG_
         print_string("B");
         print_hex(i);
         print_string("\n");
-        i ++;
+#endif
+        i++;
         delay();
     }
 }
@@ -168,9 +180,11 @@ void TestB() {
 void TestC() {
     int i = 1;
     while (1) {
+#ifdef _DEBUG_
         print_string("C");
         print_hex(i);
         print_string("\n");
+#endif
         i++;
         delay();
     }
@@ -181,5 +195,27 @@ void delay() {
         for (int j = 0; j < 1000; j++) {
             // nothing
         }
+    }
+}
+
+
+// 读取 keyboard 缓冲
+void read_key_buffer() {
+    // TODO 在多线程情况下，这段代码会出错，buffer 的操作必须上锁
+    int next = (keyboard_buffer.tail + 1) % keyboard_buffer.size;
+    if (next != keyboard_buffer.head) {
+        u8 key_code = keyboard_buffer.buffer[next];
+        keyboard_buffer.tail = next;
+        print_hex(key_code);
+    } else {
+        // 空的
+    }
+}
+
+
+// TODO tty，测试放这儿，之后移动到其他地方
+void tty_task() {
+    while (True) {
+        read_key_buffer();
     }
 }
