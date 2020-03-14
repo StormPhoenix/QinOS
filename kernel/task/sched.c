@@ -211,23 +211,6 @@ void delay() {
 }
 
 
-// 读取 keyboard 缓冲
-void read_key_buffer() {
-    // TODO 在多线程情况下，这段代码会出错，buffer 的操作必须上锁
-    int next = (keyboard_buffer.tail + 1) % keyboard_buffer.size;
-    if (next != keyboard_buffer.head) {
-        u8 key_code = keyboard_buffer.buffer[next];
-        keyboard_buffer.tail = next;
-        print_hex(key_code);
-    } else {
-        // 空的
-    }
-}
 
 
-// TODO tty，测试放这儿，之后移动到其他地方
-void tty_task() {
-    while (True) {
-        read_key_buffer();
-    }
-}
+

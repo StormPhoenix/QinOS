@@ -15,6 +15,10 @@ typedef struct key_buffer {
 } KeyBuffer;
 
 
+/** 中断任务 */
+void tty_task();
+
+
 /** 键盘输入缓冲 */
 KeyBuffer keyboard_buffer;
 

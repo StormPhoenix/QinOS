@@ -27,6 +27,7 @@
     :: "a" (entry), "b" (base), "c" (limit), "d" (attr) \
     ) \
 
+
 /**
  * __set_gdt_desc__ 的 C 语言形式
 void set_gdt_descriptor(Descriptor *descriptor, u32 base, u32 limit, u16 attributes) {
@@ -89,6 +90,14 @@ void set_gdt_descriptor(Descriptor *descriptor, u32 base, u32 limit, u16 attribu
 #define sti() { \
     __asm__(\
         "sti\n\t" \
+    );\
+}
+
+
+/** 关闭中断指令 */
+#define cli() { \
+    __asm__(\
+        "cli\n\t" \
     );\
 }
 
