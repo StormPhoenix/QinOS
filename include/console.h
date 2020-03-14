@@ -2,6 +2,9 @@
 #define _CONSOLE_H_
 
 
+#define BREAK_FLAG      0x0080
+
+
 /** 键盘缓冲结构，一个循环队列结构 */
 typedef struct key_buffer {
     // 队列中下一条空位的 index

@@ -21,4 +21,6 @@ typedef int (*system_call_ptr)();
 #define True    1
 #define False   0
 
+typedef int bool;
+
 #endif

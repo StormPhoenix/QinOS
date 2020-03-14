@@ -75,11 +75,11 @@ keyboard_interrupt:
     mov     eax, 0x17
     mov     fs, eax
 
+
+    call    do_keyboard
     ; 告知8259A结束该硬件中断
     mov     al, 0x20
     out     0x20, al
-
-    call    do_keyboard
 
     pop     eax
     pop     ebx

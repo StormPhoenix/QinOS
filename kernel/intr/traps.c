@@ -200,7 +200,7 @@ void trap_init() {
     setup_8259A();
     // 设置外部中断
     set_intr_gate(INT_VECTOR_IRQ0 + 0, timer_interrupt);
-    set_intr_gate(INT_VECTOR_IRQ0 + 1, keyboard_interrupt);
+    set_trap_gate(INT_VECTOR_IRQ0 + 1, keyboard_interrupt);
     set_intr_gate(INT_VECTOR_IRQ0 + 2, irq2);
     set_intr_gate(INT_VECTOR_IRQ0 + 3, irq3);
     set_intr_gate(INT_VECTOR_IRQ0 + 4, irq4);

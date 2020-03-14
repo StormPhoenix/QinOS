@@ -28,7 +28,7 @@ void release_lock(Mutex *mutex) {
     __asm__( \
         "movb %%al, %1" \
         : \
-        : "al" (0x0), "m" (*((char *) &(mutex->atom))) \
+        : "al" (0x00), "m" (*((char *) &(mutex->atom))) \
         );
 }
 

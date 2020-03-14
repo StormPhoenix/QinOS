@@ -574,6 +574,7 @@ setup_kernel:
 	push	esi
 	push 	eax
 	push	edx
+	push    edi
 
 	; 得到 program header 数目
 	; e_phnum 只有两个字节，需要扩展到32位
@@ -611,6 +612,47 @@ setup_kernel:
 	cmp		ecx, 0
 	jnz		.1
 
+    ; -------- 初始化 .bss 段 --------
+    ; 需要查看 section_header_table
+    ; s_addr .bss 段在内存中的起始地址
+    ; s_size .bss 的大小
+
+    ; 定位到 section_header_table
+    ; 取 e_shoff，得到 section_header_table 偏移
+    mov     esi, dword [BASE_KERNEL * 10h + OFFSET_KERNEL + 20h]
+    add     esi, BASE_KERNEL * 10h + OFFSET_KERNEL
+    ; 取 e_shnum，得到 section_header_table entry 数量
+    mov     cx, word [BASE_KERNEL * 10h + OFFSET_KERNEL + 30h]
+    movzx   ecx, cx
+
+    ; 开始检查 section_header_table 中的每一个 entry
+.check_section:
+    ; 取出 s_type
+    mov     eax, [esi + 4h]
+    cmp     eax, 8
+    jnz     .loop_check_section
+
+    ; 取出 s_addr，得到内存中的偏移
+    mov     edi, dword [esi + 0xc]
+    ; 取出 s_size，得到 bss 段大小
+    mov     edx, dword [esi + 0x14]
+    mov     al, 0
+.init_bss:
+    ; 初始化 .bss 段
+    mov     byte [es:edi], al
+
+    inc     edi
+    dec     edx
+    cmp     edx, 0
+    jnz     .init_bss
+
+.loop_check_section:
+    add     esi, 0x28
+    dec     ecx
+    cmp     ecx, 0
+    jnz     .check_section
+
+    pop     edi
 	pop		edx
 	pop		eax
 	pop		esi
