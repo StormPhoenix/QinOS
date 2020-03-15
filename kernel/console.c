@@ -1,5 +1,6 @@
 /**
- * 定义键盘处理操作，相关宏定义和 keymap 是从 Orange'S 复制过来的
+ * 定义键盘处理操作，相关宏定义和 keymap
+ * 处理流程太繁琐了，处理按键的操作都是从 Orange'S 复制过来的
  */
 
 #include "asm/system.h"
@@ -12,93 +13,124 @@
 
 #define NR_SCAN_CODES   0x80
 #define MAP_COLS        3
-#define FLAG_EXT	    0x0100		/* Normal function keys		*/
+#define FLAG_BREAK    0x0080        /* Break Code			*/
+#define FLAG_EXT    0x0100        /* Normal function keys		*/
+#define FLAG_SHIFT_L    0x0200        /* Shift key			*/
+#define FLAG_SHIFT_R    0x0400        /* Shift key			*/
+#define FLAG_CTRL_L    0x0800        /* Control key			*/
+#define FLAG_CTRL_R    0x1000        /* Control key			*/
+#define FLAG_ALT_L    0x2000        /* Alternate key		*/
+#define FLAG_ALT_R    0x4000        /* Alternate key		*/
+#define FLAG_PAD    0x8000        /* keys in num pad		*		*/
 
 
 /* Special keys */
-#define ESC		(0x01 + FLAG_EXT)	/* Esc		*/
-#define TAB		(0x02 + FLAG_EXT)	/* Tab		*/
-#define ENTER		(0x03 + FLAG_EXT)	/* Enter	*/
-#define BACKSPACE	(0x04 + FLAG_EXT)	/* BackSpace	*/
+#define ESC        (0x01 + FLAG_EXT)    /* Esc		*/
+#define TAB        (0x02 + FLAG_EXT)    /* Tab		*/
+#define ENTER        (0x03 + FLAG_EXT)    /* Enter	*/
+#define BACKSPACE    (0x04 + FLAG_EXT)    /* BackSpace	*/
 
-#define GUI_L		(0x05 + FLAG_EXT)	/* L GUI	*/
-#define GUI_R		(0x06 + FLAG_EXT)	/* R GUI	*/
-#define APPS		(0x07 + FLAG_EXT)	/* APPS	*/
+#define GUI_L        (0x05 + FLAG_EXT)    /* L GUI	*/
+#define GUI_R        (0x06 + FLAG_EXT)    /* R GUI	*/
+#define APPS        (0x07 + FLAG_EXT)    /* APPS	*/
 
 /* Shift, Ctrl, Alt */
-#define SHIFT_L		(0x08 + FLAG_EXT)	/* L Shift	*/
-#define SHIFT_R		(0x09 + FLAG_EXT)	/* R Shift	*/
-#define CTRL_L		(0x0A + FLAG_EXT)	/* L Ctrl	*/
-#define CTRL_R		(0x0B + FLAG_EXT)	/* R Ctrl	*/
-#define ALT_L		(0x0C + FLAG_EXT)	/* L Alt	*/
-#define ALT_R		(0x0D + FLAG_EXT)	/* R Alt	*/
+#define SHIFT_L        (0x08 + FLAG_EXT)    /* L Shift	*/
+#define SHIFT_R        (0x09 + FLAG_EXT)    /* R Shift	*/
+#define CTRL_L        (0x0A + FLAG_EXT)    /* L Ctrl	*/
+#define CTRL_R        (0x0B + FLAG_EXT)    /* R Ctrl	*/
+#define ALT_L        (0x0C + FLAG_EXT)    /* L Alt	*/
+#define ALT_R        (0x0D + FLAG_EXT)    /* R Alt	*/
 
 /* Lock keys */
-#define CAPS_LOCK	(0x0E + FLAG_EXT)	/* Caps Lock	*/
-#define	NUM_LOCK	(0x0F + FLAG_EXT)	/* Number Lock	*/
-#define SCROLL_LOCK	(0x10 + FLAG_EXT)	/* Scroll Lock	*/
+#define CAPS_LOCK    (0x0E + FLAG_EXT)    /* Caps Lock	*/
+#define    NUM_LOCK    (0x0F + FLAG_EXT)    /* Number Lock	*/
+#define SCROLL_LOCK    (0x10 + FLAG_EXT)    /* Scroll Lock	*/
 
 /* Function keys */
-#define F1		(0x11 + FLAG_EXT)	/* F1		*/
-#define F2		(0x12 + FLAG_EXT)	/* F2		*/
-#define F3		(0x13 + FLAG_EXT)	/* F3		*/
-#define F4		(0x14 + FLAG_EXT)	/* F4		*/
-#define F5		(0x15 + FLAG_EXT)	/* F5		*/
-#define F6		(0x16 + FLAG_EXT)	/* F6		*/
-#define F7		(0x17 + FLAG_EXT)	/* F7		*/
-#define F8		(0x18 + FLAG_EXT)	/* F8		*/
-#define F9		(0x19 + FLAG_EXT)	/* F9		*/
-#define F10		(0x1A + FLAG_EXT)	/* F10		*/
-#define F11		(0x1B + FLAG_EXT)	/* F11		*/
-#define F12		(0x1C + FLAG_EXT)	/* F12		*/
+#define F1        (0x11 + FLAG_EXT)    /* F1		*/
+#define F2        (0x12 + FLAG_EXT)    /* F2		*/
+#define F3        (0x13 + FLAG_EXT)    /* F3		*/
+#define F4        (0x14 + FLAG_EXT)    /* F4		*/
+#define F5        (0x15 + FLAG_EXT)    /* F5		*/
+#define F6        (0x16 + FLAG_EXT)    /* F6		*/
+#define F7        (0x17 + FLAG_EXT)    /* F7		*/
+#define F8        (0x18 + FLAG_EXT)    /* F8		*/
+#define F9        (0x19 + FLAG_EXT)    /* F9		*/
+#define F10        (0x1A + FLAG_EXT)    /* F10		*/
+#define F11        (0x1B + FLAG_EXT)    /* F11		*/
+#define F12        (0x1C + FLAG_EXT)    /* F12		*/
 
 /* Control Pad */
-#define PRINTSCREEN	(0x1D + FLAG_EXT)	/* Print Screen	*/
-#define PAUSEBREAK	(0x1E + FLAG_EXT)	/* Pause/Break	*/
-#define INSERT		(0x1F + FLAG_EXT)	/* Insert	*/
-#define DELETE		(0x20 + FLAG_EXT)	/* Delete	*/
-#define HOME		(0x21 + FLAG_EXT)	/* Home		*/
-#define END		(0x22 + FLAG_EXT)	/* End		*/
-#define PAGEUP		(0x23 + FLAG_EXT)	/* Page Up	*/
-#define PAGEDOWN	(0x24 + FLAG_EXT)	/* Page Down	*/
-#define UP		(0x25 + FLAG_EXT)	/* Up		*/
-#define DOWN		(0x26 + FLAG_EXT)	/* Down		*/
-#define LEFT		(0x27 + FLAG_EXT)	/* Left		*/
-#define RIGHT		(0x28 + FLAG_EXT)	/* Right	*/
+#define PRINTSCREEN    (0x1D + FLAG_EXT)    /* Print Screen	*/
+#define PAUSEBREAK    (0x1E + FLAG_EXT)    /* Pause/Break	*/
+#define INSERT        (0x1F + FLAG_EXT)    /* Insert	*/
+#define DELETE        (0x20 + FLAG_EXT)    /* Delete	*/
+#define HOME        (0x21 + FLAG_EXT)    /* Home		*/
+#define END        (0x22 + FLAG_EXT)    /* End		*/
+#define PAGEUP        (0x23 + FLAG_EXT)    /* Page Up	*/
+#define PAGEDOWN    (0x24 + FLAG_EXT)    /* Page Down	*/
+#define UP        (0x25 + FLAG_EXT)    /* Up		*/
+#define DOWN        (0x26 + FLAG_EXT)    /* Down		*/
+#define LEFT        (0x27 + FLAG_EXT)    /* Left		*/
+#define RIGHT        (0x28 + FLAG_EXT)    /* Right	*/
 
 /* ACPI keys */
-#define POWER		(0x29 + FLAG_EXT)	/* Power	*/
-#define SLEEP		(0x2A + FLAG_EXT)	/* Sleep	*/
-#define WAKE		(0x2B + FLAG_EXT)	/* Wake Up	*/
+#define POWER        (0x29 + FLAG_EXT)    /* Power	*/
+#define SLEEP        (0x2A + FLAG_EXT)    /* Sleep	*/
+#define WAKE        (0x2B + FLAG_EXT)    /* Wake Up	*/
 
 /* Num Pad */
-#define PAD_SLASH	(0x2C + FLAG_EXT)	/* /		*/
-#define PAD_STAR	(0x2D + FLAG_EXT)	/* *		*/
-#define PAD_MINUS	(0x2E + FLAG_EXT)	/* -		*/
-#define PAD_PLUS	(0x2F + FLAG_EXT)	/* +		*/
-#define PAD_ENTER	(0x30 + FLAG_EXT)	/* Enter	*/
-#define PAD_DOT		(0x31 + FLAG_EXT)	/* .		*/
-#define PAD_0		(0x32 + FLAG_EXT)	/* 0		*/
-#define PAD_1		(0x33 + FLAG_EXT)	/* 1		*/
-#define PAD_2		(0x34 + FLAG_EXT)	/* 2		*/
-#define PAD_3		(0x35 + FLAG_EXT)	/* 3		*/
-#define PAD_4		(0x36 + FLAG_EXT)	/* 4		*/
-#define PAD_5		(0x37 + FLAG_EXT)	/* 5		*/
-#define PAD_6		(0x38 + FLAG_EXT)	/* 6		*/
-#define PAD_7		(0x39 + FLAG_EXT)	/* 7		*/
-#define PAD_8		(0x3A + FLAG_EXT)	/* 8		*/
-#define PAD_9		(0x3B + FLAG_EXT)	/* 9		*/
-#define PAD_UP		PAD_8			/* Up		*/
-#define PAD_DOWN	PAD_2			/* Down		*/
-#define PAD_LEFT	PAD_4			/* Left		*/
-#define PAD_RIGHT	PAD_6			/* Right	*/
-#define PAD_HOME	PAD_7			/* Home		*/
-#define PAD_END		PAD_1			/* End		*/
-#define PAD_PAGEUP	PAD_9			/* Page Up	*/
-#define PAD_PAGEDOWN	PAD_3			/* Page Down	*/
-#define PAD_INS		PAD_0			/* Ins		*/
-#define PAD_MID		PAD_5			/* Middle key	*/
-#define PAD_DEL		PAD_DOT			/* Del		*/
+#define PAD_SLASH    (0x2C + FLAG_EXT)    /* /		*/
+#define PAD_STAR    (0x2D + FLAG_EXT)    /* *		*/
+#define PAD_MINUS    (0x2E + FLAG_EXT)    /* -		*/
+#define PAD_PLUS    (0x2F + FLAG_EXT)    /* +		*/
+#define PAD_ENTER    (0x30 + FLAG_EXT)    /* Enter	*/
+#define PAD_DOT        (0x31 + FLAG_EXT)    /* .		*/
+#define PAD_0        (0x32 + FLAG_EXT)    /* 0		*/
+#define PAD_1        (0x33 + FLAG_EXT)    /* 1		*/
+#define PAD_2        (0x34 + FLAG_EXT)    /* 2		*/
+#define PAD_3        (0x35 + FLAG_EXT)    /* 3		*/
+#define PAD_4        (0x36 + FLAG_EXT)    /* 4		*/
+#define PAD_5        (0x37 + FLAG_EXT)    /* 5		*/
+#define PAD_6        (0x38 + FLAG_EXT)    /* 6		*/
+#define PAD_7        (0x39 + FLAG_EXT)    /* 7		*/
+#define PAD_8        (0x3A + FLAG_EXT)    /* 8		*/
+#define PAD_9        (0x3B + FLAG_EXT)    /* 9		*/
+#define PAD_UP        PAD_8            /* Up		*/
+#define PAD_DOWN    PAD_2            /* Down		*/
+#define PAD_LEFT    PAD_4            /* Left		*/
+#define PAD_RIGHT    PAD_6            /* Right	*/
+#define PAD_HOME    PAD_7            /* Home		*/
+#define PAD_END        PAD_1            /* End		*/
+#define PAD_PAGEUP    PAD_9            /* Page Up	*/
+#define PAD_PAGEDOWN    PAD_3            /* Page Down	*/
+#define PAD_INS        PAD_0            /* Ins		*/
+#define PAD_MID        PAD_5            /* Middle key	*/
+#define PAD_DEL        PAD_DOT            /* Del		*/
+
+/** ---------------- 控制键状态 -------------------- */
+static int code_with_E0 = 0;
+/* l shift state */
+static int shift_l;
+/* r shift state */
+static int shift_r;
+/* l alt state	 */
+static int alt_l;
+/* r left state	 */
+static int alt_r;
+/* l ctrl state	 */
+static int ctrl_l;
+/* l ctrl state	 */
+static int ctrl_r;
+/* Caps Lock	 */
+static int caps_lock;
+/* Num Lock	 */
+static int num_lock;
+/* Scroll Lock	 */
+static int scroll_lock;
+/* Row in keymap array */
+static int column;
 
 /** ----------------- 键盘映射表 -------------------- */
 u32 keymap[NR_SCAN_CODES * MAP_COLS] = {
@@ -236,6 +268,12 @@ u32 keymap[NR_SCAN_CODES * MAP_COLS] = {
 
 static Mutex key_buff_mutex = {0};
 
+/** 读取 keyboard 缓冲 */
+static u8 get_key_from_buffer();
+
+/** tty task 执行 */
+static void keyboard_read();
+
 /** 键盘中断 */
 void do_keyboard() {
     u8 code = in_byte(0x60);
@@ -251,7 +289,6 @@ void do_keyboard() {
 //    release_lock(&key_buff_mutex);
 }
 
-
 /** 初始化 keyboard */
 void keyboard_init() {
     // 初始化缓冲区
@@ -261,46 +298,145 @@ void keyboard_init() {
     enable_irq(IRQ_KEYBOARD);
 }
 
-
-/** 读取 keyboard 缓冲 */
-static u8 read_from_key_buf() {
-    u8 scan_code;
-    // TODO 在多线程情况下，这段代码会出错，buffer 的操作必须上锁
-// TODO   cli(); 用户态好像不能执行这个指令
-    int next = (keyboard_buffer.tail + 1) % keyboard_buffer.size;
-    if (next != keyboard_buffer.head) {
-        scan_code = keyboard_buffer.buffer[next];
-        keyboard_buffer.tail = next;
-        return scan_code;
-    }
-// TODO   sti();
-    return 0;
-}
-
-
 // TODO tty，测试放这儿，之后移动到其他地方
 void tty_task() {
-    bool  is_make;
-    u8 output_buf[2];
-    memory_set(output_buf, 0, 2);
+    while (1) {
+        keyboard_read();
+    }
+}
+
+static void in_process(u32 key) {
+    char output[2] = {'\0', '\0'};
+
+    if (!(key & FLAG_EXT)) {
+        output[0] = key & 0xFF;
+        print_string(output);
+    }
+}
+
+static u8 get_key_from_buffer() {
+    u8 scan_code;
 
     while (True) {
         request_lock(&key_buff_mutex);
-        u8 scan_code = read_from_key_buf();
+        int next = (keyboard_buffer.tail + 1) % keyboard_buffer.size;
+        if ((next + 1) % keyboard_buffer.size != keyboard_buffer.head) {
+            // key buffer not empty
+            scan_code = keyboard_buffer.buffer[next];
+            keyboard_buffer.tail = next;
+            break;
+        }
         release_lock(&key_buff_mutex);
+    }
+    release_lock(&key_buff_mutex);
+    return scan_code;
+}
 
-        switch (scan_code) {
-            case 0xE1:
-            case 0xE0:
-                // Do nothing
+static void keyboard_read() {
+    u8 scan_code;
+    char output[2];
+    int make;    /* 1: make;  0: break. */
+
+    u32 key = 0;/* 用一个整型来表示一个键。比如，如果 Home 被按下，
+			 * 则 key 值将为定义在 keyboard.h 中的 'HOME'。
+			 */
+    u32 *keyrow;    /* 指向 keymap[] 的某一行 */
+
+    code_with_E0 = 0;
+
+    scan_code = get_key_from_buffer();
+
+    /* 下面开始解析扫描码 */
+    if (scan_code == 0xE1) {
+        int i;
+        u8 pausebrk_scode[] = {0xE1, 0x1D, 0x45,
+                               0xE1, 0x9D, 0xC5};
+        int is_pausebreak = 1;
+        for (i = 1; i < 6; i++) {
+            if (get_key_from_buffer() != pausebrk_scode[i]) {
+                is_pausebreak = 0;
+                break;
+            }
+        }
+        if (is_pausebreak) {
+            key = PAUSEBREAK;
+        }
+    } else if (scan_code == 0xE0) {
+        scan_code = get_key_from_buffer();
+
+        /* PrintScreen 被按下 */
+        if (scan_code == 0x2A) {
+            if (get_key_from_buffer() == 0xE0) {
+                if (get_key_from_buffer() == 0x37) {
+                    key = PRINTSCREEN;
+                    make = 1;
+                }
+            }
+        }
+        /* PrintScreen 被释放 */
+        if (scan_code == 0xB7) {
+            if (get_key_from_buffer() == 0xE0) {
+                if (get_key_from_buffer() == 0xAA) {
+                    key = PRINTSCREEN;
+                    make = 0;
+                }
+            }
+        }
+        /* 不是PrintScreen, 此时scan_code为0xE0紧跟的那个值. */
+        if (key == 0) {
+            code_with_E0 = 1;
+        }
+    }
+    if ((key != PAUSEBREAK) && (key != PRINTSCREEN)) {
+        /* 首先判断Make Code 还是 Break Code */
+        make = (scan_code & FLAG_BREAK ? 0 : 1);
+
+        /* 先定位到 keymap 中的行 */
+        keyrow = &keymap[(scan_code & 0x7F) * MAP_COLS];
+
+        column = 0;
+        if (shift_l || shift_r) {
+            column = 1;
+        }
+        if (code_with_E0) {
+            column = 2;
+            code_with_E0 = 0;
+        }
+
+        key = keyrow[column];
+
+        switch (key) {
+            case SHIFT_L:
+                shift_l = make;
+                break;
+            case SHIFT_R:
+                shift_r = make;
+                break;
+            case CTRL_L:
+                ctrl_l = make;
+                break;
+            case CTRL_R:
+                ctrl_r = make;
+                break;
+            case ALT_L:
+                alt_l = make;
+                break;
+            case ALT_R:
+                alt_l = make;
                 break;
             default:
-                // 判断 Code 类型
-                is_make = (scan_code & BREAK_FLAG ? False : True);
-                if (is_make) {
-                    output_buf[0] = keymap[(scan_code & 0x7F) * MAP_COLS];
-                    print_string(output_buf);
-                }
+                break;
+        }
+
+        if (make) { /* 忽略 Break Code */
+            key |= shift_l ? FLAG_SHIFT_L : 0;
+            key |= shift_r ? FLAG_SHIFT_R : 0;
+            key |= ctrl_l ? FLAG_CTRL_L : 0;
+            key |= ctrl_r ? FLAG_CTRL_R : 0;
+            key |= alt_l ? FLAG_ALT_L : 0;
+            key |= alt_r ? FLAG_ALT_R : 0;
+
+            in_process(key);
         }
     }
 }
