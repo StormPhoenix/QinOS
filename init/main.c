@@ -32,7 +32,7 @@ void setup_gdt() {
     *((u16 *) (&gdt_ptr[0])) = GDT_SIZE * sizeof(Descriptor) - 1;
     *((u32 *) (&gdt_ptr[2])) = (u32) &gdt;
     lgdt(gdt_ptr);
-    print_string("You superise mother-fucker!\n");
+//    print_string("You superise mother-fucker!\n");
 }
 
 // 主函数入口

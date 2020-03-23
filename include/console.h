@@ -19,7 +19,7 @@ typedef struct key_buffer {
 
 
 /** 中断任务 */
-void tty_task();
+void tty();
 
 
 /** 键盘输入缓冲 */

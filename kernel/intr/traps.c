@@ -241,5 +241,5 @@ void trap_init() {
     *((u16 *) (&idt_ptr[0])) = IDT_SIZE * sizeof(Gate) - 1;
     (*(u32 *) (&idt_ptr[2])) = (u32) &idt;
     lidt(idt_ptr);
-    print_string("Finish setting the bitch idt!\n");
+//    print_string("Finish setting the bitch idt!\n");
 }
