@@ -1,29 +1,12 @@
 #ifndef _CONSOLE_H_
 #define _CONSOLE_H_
 
-
-#define BREAK_FLAG      0x0080
-
-
-/** 键盘缓冲结构，一个循环队列结构 */
-typedef struct key_buffer {
-    // 队列中下一条空位的 index
-    int head;
-    // 队尾 index
-    int tail;
-    // 缓冲区大小
-    int size;
-    // 键盘缓冲
-    char buffer[128];
-} KeyBuffer;
+/** 回调函数，用于处理键盘缓冲中读出的数据 */
+void terminal_key_callback(u32 key, int tty_no);
 
 
 /** 中断任务 */
 void tty();
-
-
-/** 键盘输入缓冲 */
-KeyBuffer keyboard_buffer;
 
 
 /** 键盘初始化 */
