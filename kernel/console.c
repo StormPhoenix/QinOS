@@ -24,13 +24,13 @@
  */
 typedef struct console {
     // 对应显存起始位置
-    u32 start_video_mem_addr;
+    u32 video_memory_start_address;
     // 显存大小
-    u32 video_mem_size;
+    u32 video_memory_size;
     // 当前显示地址
-    u32 current_video_mem_addr;
+    u32 current_display_address;
     // 光标显示位置
-    u32 cursor;
+    u32 cursor_position;
 } Console;
 
 /**
@@ -79,11 +79,11 @@ static void tty_init(int tty_no) {
     Console *console_ptr = &console_table[tty_no];
     // 每个 console 占用多少显存大小
     int console_video_size = VIDEO_MEMORY_SIZE / NR_CONSOLE;
-    console_ptr->start_video_mem_addr = VIDEO_MEMORY_BASE + tty_no * console_video_size;
-    console_ptr->video_mem_size = console_video_size;
-    console_ptr->current_video_mem_addr = console_ptr->start_video_mem_addr;
-    console_ptr->cursor = 0;
-    set_cursor(console_ptr->cursor);
+    console_ptr->video_memory_start_address = VIDEO_MEMORY_BASE + tty_no * console_video_size;
+    console_ptr->video_memory_size = console_video_size;
+    console_ptr->current_display_address = console_ptr->video_memory_start_address;
+    console_ptr->cursor_position = 0;
+    set_cursor(console_ptr->cursor_position);
 
     tty_table[tty_no].console_ptr = console_ptr;
 }
@@ -140,6 +140,7 @@ void terminal_key_callback(u32 key, int tty_no) {
 
 
 // TODO 代码整理下，太乱了
+/* 用来显示屏的显示方式的常量 */
 #define DEFAULT_CHAR_COLOR      0x07
 #define CRTC_ADDR_REG           0x3D4    /* CRT Controller Registers - Addr Register */
 #define CRTC_DATA_REG           0x3D5    /* CRT Controller Registers - Data Register */
@@ -150,12 +151,12 @@ void terminal_key_callback(u32 key, int tty_no) {
 
 static void print_console(int tty_no, char key) {
     Console *console_ptr = tty_table[tty_no].console_ptr;
-    u8 *video_ptr = (u8 *) console_ptr->current_video_mem_addr;
+    u8 *video_ptr = (u8 *) console_ptr->current_display_address;
     *video_ptr++ = key;
     *video_ptr++ = DEFAULT_CHAR_COLOR;
-    console_ptr->current_video_mem_addr += 2;
-    console_ptr->cursor++;
-    set_cursor(console_ptr->cursor);
+    console_ptr->current_display_address += 2;
+    console_ptr->cursor_position++;
+    set_cursor(console_ptr->cursor_position);
 }
 
 static void set_cursor(unsigned int position) {
