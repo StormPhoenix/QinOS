@@ -1,7 +1,6 @@
+extern  cursor_pos
+
 [SECTION  .data]
-; 屏幕光标位置，初始位置在 [17, 0]
-POINTER_POS:
-    dd      (80 * 17 + 0) * 2
 
 [SECTION .text]
 
@@ -109,10 +108,12 @@ print_string:
 	push	ebx
 
 	mov		esi, [ebp + 8]
+	; 设置字符显示方式 eg. "黑底白字"
 	mov		ah, 0fh
-	mov		edi, [POINTER_POS]
+	mov		edi, [cursor_pos]
 	
 .begin:
+    ; 从 [ds:si] 读入一个 byte 到 al
 	lodsb
 	; test 指令，用来测试 al 是否为0而不用修改 al 的值，又学到一个
 	test 	al, al
@@ -149,7 +150,7 @@ print_string:
 	jb      .1
 	mov     edi, 0
 .1:
-	mov		[POINTER_POS], edi
+	mov		[cursor_pos], edi
 
 	pop		ebx
 	pop		edi
@@ -173,7 +174,7 @@ print_hex:
 	; 黑底白字
 	mov		ah, 0fh
 	mov		dl, al
-	mov		edi, [POINTER_POS]
+	mov		edi, [cursor_pos]
 
 	; 先输出高4位
 	shr		al, 4
@@ -198,7 +199,7 @@ print_hex:
 	mov		al, dl
 	loop	.1
 
-	mov		[POINTER_POS], edi
+	mov		[cursor_pos], edi
 
 	pop 	ecx
 	pop 	edi

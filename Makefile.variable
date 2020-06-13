@@ -2,8 +2,8 @@ PLATFORM    = "macOS"
 
 ifeq ($(PLATFORM), "macOS")
     AS			= nasm
-    LD			= i386-elf-ld
-    CC			= i386-elf-gcc
+    LD			= x86_64-elf-ld
+    CC			= x86_64-elf-gcc
     MOUNT		= hdiutil mount ./boot.img
     CP_LOADER   = cp loader.bin /Volumes/fuck\ \ virus/
     CP_KERNEL   = cp kernel.bin /Volumes/fuck\ \ virus/

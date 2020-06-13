@@ -46,7 +46,7 @@ sched.o:
 sys_call.o: ./task/sys_call.asm
 	$(AS) -f elf ./task/sys_call.asm -o $@
 
-console.o: ./console.c
+console.o: ./console.c ../include/global.h
 	$(CC) -m32 $(CFLAGS) ./console.c -o $@
 
 keyboard.o: ./keyboard.c

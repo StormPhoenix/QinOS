@@ -147,7 +147,7 @@ void set_gdt_descriptor(Descriptor *descriptor, u32 base, u32 limit, u16 attribu
 }
 
 
-/** 跳入内核态 */
+/** 跳入用户态 */
 #define move_to_user_mode() \
     __asm__( \
         "movl   %%esp, %%eax\n\t" \

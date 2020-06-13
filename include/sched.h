@@ -62,6 +62,9 @@ void TestB();
 
 void TestC();
 
+/**
+ * tty 进程的起始位置
+ */
 void tty_task();
 
 

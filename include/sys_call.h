@@ -25,7 +25,11 @@ system_call_ptr sys_call_table[] = {sys_get_ticks};
 /** system call 表大小 */
 int NR_syscalls = sizeof(sys_call_table) / sizeof(system_call_ptr);
 
-/** 无参数 systemcall，用于生成系统调用函数 */
+/**
+ * __syscall0__(type, name)
+ * 无参数系统调用宏，用于生成无参数的系统调用函数
+ * __NR_##name 是一个字符串拼接模板，用来动态生成系统调用号
+ * */
 #define __syscall0__(type, name) \
 type name() { \
     long __res; \

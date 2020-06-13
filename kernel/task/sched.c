@@ -1,7 +1,6 @@
 #include "asm/system.h"
 #include "bits.h"
 #include "console.h"
-#include "global.h"
 #include "mm/mm.h"
 #include "pm.h"
 #include "sched.h"
@@ -81,10 +80,9 @@ void sched_init() {
         task->tss.esp0 = (u32) task + PAGE_SIZE;
         task->tss.eflags = 0x0202;
         // 初始化 gdt LDT entry、LDT selector
-        set_ldt_desc(
-                FIRST_LDT_ENTRY + i * 2,
-                virtual_to_linear_addr(SELECTOR_KERNEL_DATA, (u32) &(task->LDT)),
-                sizeof(task->LDT) - 1);
+        set_ldt_desc(FIRST_LDT_ENTRY + i * 2,
+                     virtual_to_linear_addr(SELECTOR_KERNEL_DATA, (u32) &(task->LDT)),
+                     sizeof(task->LDT) - 1);
 
         task->tss.ldt = _LDT(i);
         // 初始化 LDT
@@ -94,9 +92,8 @@ void sched_init() {
         task->LDT[2].attributes = DATA_ATTR386_RW | (DPL_USER << 5);
 
         // 初始化 gdt TSS entry
-        set_tss_desc(
-                FIRST_TSS_ENTRY + i * 2,
-                virtual_to_linear_addr(SELECTOR_KERNEL_DATA, (u32) &(task->tss)));
+        set_tss_desc(FIRST_TSS_ENTRY + i * 2,
+                     virtual_to_linear_addr(SELECTOR_KERNEL_DATA, (u32) &(task->tss)));
 
         // task property
         task->task_id = i;
@@ -125,6 +122,7 @@ void setup_8253() {
 
 void schedule() {
     int next = -1;
+    // 记录所有进程中，剩余时间片的最大值
     int max_counter = -1;
     while (1) {
         for (int i = 0; i < NR_TASK; i++) {
@@ -136,9 +134,11 @@ void schedule() {
         }
 
         if (max_counter != 0) {
+            // 如果有的进程时间片没有用完，则切换到这个剩余时间片最大的进程执行
             break;
         }
 
+        // 如果所有进程的时间片都使用完了，则重新分配时间片数
         for (int i = 0; i < NR_TASK; i++) {
             if (task_table[i] != 0) {
                 task_table[i]->counter = task_table[i]->counter / 2 + task_table[i]->priority;

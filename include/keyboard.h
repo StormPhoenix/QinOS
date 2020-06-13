@@ -14,7 +14,9 @@
 #define FLAG_CTRL_R             0x1000        /* Control key			*/
 #define FLAG_ALT_L              0x2000        /* Alternate key		*/
 #define FLAG_ALT_R              0x4000        /* Alternate key		*/
-#define FLAG_PAD                0x8000        /* keys in num pad		*		*/
+#define FLAG_PAD                0x8000        /* keys in num pad		*/
+
+#define MASK_RAW                0x01ff        /* key & MASK_RAW = raw key */
 
 /* Special keys */
 #define ESC                     (0x01 + FLAG_FUNCTION_KEY)    /* Esc		*/
